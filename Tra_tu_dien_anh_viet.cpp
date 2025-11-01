@@ -57,105 +57,106 @@ public:
     // Hàm học ngữ pháp (12 thì, mỗi thì 10 câu)
     // ===============================
     void learnGrammars() {
-        while (true) {
-            int choice;
-            cout << "\n=== HỌC NGỮ PHÁP 12 THÌ ===\n";
-            cout << "1  Present Simple\n2  Present Continuous\n3  Present Perfect\n4  Present Perfect Continuous\n";
-            cout << "5  Past Simple\n6  Past Continuous\n7  Past Perfect\n8  Past Perfect Continuous\n";
-            cout << "9  Future Simple\n10 Future Continuous\n11 Future Perfect\n12 Future Perfect Continuous\n";
-            cout << "0  Thoát\n";
-            cout << "Chọn số (0-12): ";
-            if (!(cin >> choice)) {
-                cin.clear();
-                cin.ignore(10000, '\n');
-                cout << "Nhập sai. Vui lòng nhập một số.\n";
-                continue;
-            }
+    while (true) {
+        int choice;
+        cout << "\n=== HỌC NGỮ PHÁP 12 THÌ ===\n";
+        cout << "1  Present Simple\n2  Present Continuous\n3  Present Perfect\n4  Present Perfect Continuous\n";
+        cout << "5  Past Simple\n6  Past Continuous\n7  Past Perfect\n8  Past Perfect Continuous\n";
+        cout << "9  Future Simple\n10 Future Continuous\n11 Future Perfect\n12 Future Perfect Continuous\n";
+        cout << "0  Thoát\n";
+        cout << "Chọn số (0-12): ";
+        if (!(cin >> choice)) {
+            cin.clear();
             cin.ignore(10000, '\n');
+            cout << "Nhập sai. Vui lòng nhập một số.\n";
+            continue;
+        }
+        cin.ignore(10000, '\n');
 
-            if (choice == 0) {
-                cout << "Thoát học ngữ pháp.\n";
+        if (choice == 0) {
+            cout << "Thoát học ngữ pháp.\n";
+            break;
+        }
+
+        switch (choice) {
+            case 1:
+                showTheory("PRESENT SIMPLE", "S + V(s/es) + O",
+                           "Thói quen, sự thật hiển nhiên, hành động lặp lại.",
+                           "I usually get up at 6 a.m.");
+                grammarQuiz(presentSimpleQuestions());
                 break;
-            }
+            case 2:
+                showTheory("PRESENT CONTINUOUS", "S + am/is/are + V-ing",
+                           "Hành động đang xảy ra ngay lúc nói.",
+                           "He is talking on the phone right now.");
+                grammarQuiz(presentContinuousQuestions());
+                break;
+            case 3:
+                showTheory("PRESENT PERFECT", "S + have/has + V3",
+                           "Hành động đã xảy ra và còn ảnh hưởng đến hiện tại.",
+                           "She has visited Japan twice.");
+                grammarQuiz(presentPerfectQuestions());
+                break;
+            case 4:
+                showTheory("PRESENT PERFECT CONTINUOUS", "S + have/has been + V-ing",
+                           "Hành động bắt đầu trong quá khứ và còn tiếp diễn đến hiện tại.",
+                           "I have been learning English for three years.");
+                grammarQuiz(presentPerfContQuestions());
+                break;
+            case 5:
+                showTheory("PAST SIMPLE", "S + V2 + O",
+                           "Hành động đã xảy ra và kết thúc trong quá khứ.",
+                           "We watched a movie last night.");
+                grammarQuiz(pastSimpleQuestions());
+                break;
+            case 6:
+                showTheory("PAST CONTINUOUS", "S + was/were + V-ing",
+                           "Hành động đang diễn ra tại một thời điểm trong quá khứ.",
+                           "I was reading when the phone rang.");
+                grammarQuiz(pastContinuousQuestions());
+                break;
+            case 7:
+                showTheory("PAST PERFECT", "S + had + V3",
+                           "Hành động xảy ra trước một hành động khác trong quá khứ.",
+                           "They had eaten dinner before I arrived.");
+                grammarQuiz(pastPerfectQuestions());
+                break;
+            case 8:
+                showTheory("PAST PERFECT CONTINUOUS", "S + had been + V-ing",
+                           "Hành động kéo dài đến một thời điểm trong quá khứ.",
+                           "He had been driving for hours before he stopped.");
+                grammarQuiz(pastPerfContQuestions());
+                break;
+            case 9:
+                showTheory("FUTURE SIMPLE", "S + will + V",
+                           "Dự đoán, quyết định ngay lúc nói, lời hứa.",
+                           "She will start college next year.");
+                grammarQuiz(futureSimpleQuestions());
+                break;
+            case 10:
+                showTheory("FUTURE CONTINUOUS", "S + will be + V-ing",
+                           "Hành động sẽ đang diễn ra tại một thời điểm trong tương lai.",
+                           "At 9 a.m. tomorrow, I will be working in the office.");
+                grammarQuiz(futureContinuousQuestions());
+                break;
+            case 11:
+                showTheory("FUTURE PERFECT", "S + will have + V3",
+                           "Hành động sẽ hoàn thành trước một thời điểm trong tương lai.",
+                           "By next week, they will have finished the project.");
+                grammarQuiz(futurePerfectQuestions());
+                break;
+            case 12:
+                showTheory("FUTURE PERFECT CONTINUOUS", "S + will have been + V-ing",
+                           "Hành động sẽ kéo dài đến một thời điểm trong tương lai.",
+                           "By 2030, she will have been living abroad for ten years.");
+                grammarQuiz(futurePerfContQuestions());
+                break;
+            default:
+                cout << "Vui lòng chọn số hợp lệ (0-12).\n";
+        }
+    }
+}
 
-            switch (choice) {
-                case 1:
-                    showTheory("PRESENT SIMPLE", "S + V(s/es) + O",
-                               "Thói quen, sự thật hiển nhiên, hành động lặp lại.",
-                               "He plays football every Sunday.");
-                    grammarQuiz(presentSimpleQuestions());
-                    break;
-                case 2:
-                    showTheory("PRESENT CONTINUOUS", "S + am/is/are + V-ing",
-                               "Hành động đang xảy ra ngay lúc nói.",
-                               "She is reading a book now.");
-                    grammarQuiz(presentContinuousQuestions());
-                    break;
-                case 3:
-                    showTheory("PRESENT PERFECT", "S + have/has + V3",
-                               "Hành động đã xảy ra liên quan tới hiện tại.",
-                               "I have finished my homework.");
-                    grammarQuiz(presentPerfectQuestions());
-                    break;
-                case 4:
-                    showTheory("PRESENT PERFECT CONTINUOUS", "S + have/has been + V-ing",
-                               "Hành động bắt đầu trong quá khứ và còn tác động đến hiện tại.",
-                               "I have been studying for two hours.");
-                    grammarQuiz(presentPerfContQuestions());
-                    break;
-                case 5:
-                    showTheory("PAST SIMPLE", "S + V2 + O",
-                               "Hành động đã xảy ra và kết thúc trong quá khứ.",
-                               "I visited Hanoi last year.");
-                    grammarQuiz(pastSimpleQuestions());
-                    break;
-                case 6:
-                    showTheory("PAST CONTINUOUS", "S + was/were + V-ing",
-                               "Hành động đang diễn ra tại một thời điểm trong quá khứ.",
-                               "I was watching TV when he called.");
-                    grammarQuiz(pastContinuousQuestions());
-                    break;
-                case 7:
-                    showTheory("PAST PERFECT", "S + had + V3",
-                               "Hành động xảy ra trước một hành động khác trong quá khứ.",
-                               "She had left before I arrived.");
-                    grammarQuiz(pastPerfectQuestions());
-                    break;
-                case 8:
-                    showTheory("PAST PERFECT CONTINUOUS", "S + had been + V-ing",
-                               "Hành động kéo dài đến một thời điểm trong quá khứ.",
-                               "She had been waiting for an hour before the bus came.");
-                    grammarQuiz(pastPerfContQuestions());
-                    break;
-                case 9:
-                    showTheory("FUTURE SIMPLE", "S + will + V",
-                               "Dự đoán, quyết định ngay lúc nói, lời hứa.",
-                               "I will call you tomorrow.");
-                    grammarQuiz(futureSimpleQuestions());
-                    break;
-                case 10:
-                    showTheory("FUTURE CONTINUOUS", "S + will be + V-ing",
-                               "Hành động sẽ đang diễn ra tại một thời điểm trong tương lai.",
-                               "This time tomorrow I will be flying to Tokyo.");
-                    grammarQuiz(futureContinuousQuestions());
-                    break;
-                case 11:
-                    showTheory("FUTURE PERFECT", "S + will have + V3",
-                               "Hành động sẽ hoàn thành trước một thời điểm trong tương lai.",
-                               "By next year, I will have graduated.");
-                    grammarQuiz(futurePerfectQuestions());
-                    break;
-                case 12:
-                    showTheory("FUTURE PERFECT CONTINUOUS", "S + will have been + V-ing",
-                               "Hành động sẽ kéo dài đến một thời điểm trong tương lai.",
-                               "By June, I will have been working here for five years.");
-                    grammarQuiz(futurePerfContQuestions());
-                    break;
-                default:
-                    cout << " Vui lòng chọn số hợp lệ (0-12).\n";
-            } // end switch
-        } // end while
-    } // end learnGrammars
 
 private:
     // ===============================
