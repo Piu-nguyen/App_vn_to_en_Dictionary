@@ -1,168 +1,312 @@
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include <string>
 #include <vector>
-#include <cctype>
-#include <filesystem>
+#include <ctime>
+#include <iomanip>
+#include <algorithm>
 using namespace std;
-namespace fs = std::filesystem;
+
+
+// dua du lieu file txt vào phan chu de khoang 400 tu theo cau truc nhu tren(20 chu de)
+// xuat danh sach tu da luu vao file ra mot file txt 
 
 // ===============================
-// Struct chứa thông tin một từ
+// Enum for IPA symbols
+// ===============================
+enum IPA {
+    // Vowels (20)
+    IPA_i, IPA_i_long, IPA_e, IPA_ae, IPA_a, IPA_a_long, IPA_o, IPA_o_long,
+    IPA_u, IPA_u_long, IPA_uh, IPA_er,
+    IPA_ai, IPA_au, IPA_oi, IPA_ei, IPA_ou, IPA_iu, IPA_ea, IPA_ua,
+
+    // Consonants (24)
+    IPA_p, IPA_b, IPA_t, IPA_d, IPA_k, IPA_g,
+    IPA_f, IPA_v, IPA_th, IPA_dh, IPA_s, IPA_z,
+    IPA_sh, IPA_zh, IPA_h, IPA_ch, IPA_j, IPA_m,
+    IPA_n, IPA_ng, IPA_l, IPA_r, IPA_y, IPA_w
+};
+
+
+// ===============================
+// Struct to store a word
 // ===============================
 struct Word {
-    string english;
-    string ipa;
-    string vietnam;
-    string example;
+    string english;     // English word
+    string meaning;     // Meaning
+    IPA ipa;            // IPA enum
+    string example;     // Example sentence
+    bool learned = false;   // Whether the word is learned
 };
 
 // ===============================
-// Class Dictionary (cha)
+// Struct to store review info
+// ===============================
+struct ReviewWord {
+    string word;
+    string timeMarked;
+};
+
+// ===============================
+// Union to support flexible searching
+// ===============================
+union SearchKey {
+    const char* keyword;
+    int hash;
+};
+
+// ===============================
+// Base class Dictionary
 // ===============================
 class Dictionary {
 protected:
     vector<Word> words;
 
+    int hashString(const string& s) {
+        int hash = 0;
+        for (size_t i = 0; i < s.length(); ++i) {
+            char c = s[i];
+            hash = hash * 31 + tolower((unsigned char)c);
+        }
+        return hash;
+    }
+
+    string getIPAString(IPA ipa) const {
+    switch (ipa) {
+        case IPA_ae: return "/ae/";
+        case IPA_i: return "/i/";
+        case IPA_i_long: return "/i:/";
+        case IPA_e: return "/e/";
+        case IPA_a: return "/a/";
+        case IPA_o: return "/o/";
+        case IPA_u: return "/u/";
+        case IPA_uh: return "/?/";
+        case IPA_er: return "/?:/";
+        case IPA_ai: return "/ai/";
+        case IPA_au: return "/au/";
+        case IPA_oi: return "/oi/";
+        case IPA_ei: return "/ei/";
+        case IPA_ou: return "/ou/";
+        case IPA_sh: return "/?/";
+        case IPA_th: return "/?/";
+        case IPA_dh: return "/?/";
+        case IPA_ch: return "/t?/";
+        case IPA_j: return "/d?/";
+        default: return "(unknown)";
+    }
+}
+
+
 public:
-    void loadFromFile(const string& filename);
-    void displayAll() const;
-    string translate(const string& eng) const;
+    void addWord(const Word& w) {
+        words.push_back(w);
+    }
+
+    void showAllWords() const {
+        cout << "\n=== Word List ===\n";
+        for (const auto& w : words) {
+            cout << "Word: " << w.english
+                 << "\nMeaning: " << w.meaning
+                 << "\nIPA: " << getIPAString(w.ipa)
+                 << "\nExample: " << w.example
+                 << "\nStatus: " << (w.learned ? "Learned" : "Not learned")
+                 << "\n---------------------\n";
+        }
+    }
+
+    void searchWord(const string& keyword) const {
+        cout << "\nSearching for: " << keyword << "\n";
+        bool found = false;
+        for (const auto& w : words) {
+            if (w.english == keyword) {
+                cout << "Found!\n";
+                cout << "Meaning: " << w.meaning << "\n";
+                cout << "IPA: " << getIPAString(w.ipa) << "\n";
+                cout << "Example: " << w.example << "\n";
+                found = true;
+                break;
+            }
+        }
+        if (!found) cout << "No word found.\n";
+    }
+
+    int countLearned() const {
+        int count = 0;
+        for (const auto& w : words)
+            if (w.learned) count++;
+        return count;
+    }
+
+    int totalWords() const {
+        return words.size();
+    }
+
+    void showUnlearnedWords() const {
+        cout << "\nUnlearned words:\n";
+        for (const auto& w : words)
+            if (!w.learned)
+                cout << "- " << w.english << "\n";
+    }
+
+    void markWordLearned(const string& word) {
+        for (auto& w : words)
+            if (w.english == word)
+                w.learned = true;
+    }
 };
 
 // ===============================
-// Class Topic kế thừa Dictionary
+// Class Topic inherits from Dictionary
 // ===============================
 class Topic : public Dictionary {
 private:
     string name;
+
 public:
-    Topic(const string& n);
-    string getName() const;
-    void showTopic() const;
+    Topic(const string& n) : name(n) {}
+
+    string getName() const { return name; }
 };
 
 // ===============================
-// Triển khai hàm Dictionary
+// Class VocabularyApp
 // ===============================
+class VocabularyApp {
+private:
+    vector<Topic> topics;
+    vector<ReviewWord> reviewList;
 
-// Đọc dữ liệu từ file (định dạng như file animals_topic_part1.txt)
-void Dictionary::loadFromFile(const string& filename) {
-    ifstream file(filename);
-    if (!file.is_open()) {
-        cerr << "❌ Không thể mở file: " << filename << endl;
-        return;
+public:
+	void buildSampleData() {
+    // ===== Topic 1: Animals =====
+	    Topic animals("Animals");
+	
+	    Word w1;
+	    w1.english = "cat";
+	    w1.meaning = "a small domesticated animal";
+	    w1.ipa = IPA_ae;  // /ae/ for "cat"
+	    w1.example = "The cat is sleeping on the sofa.";
+	    w1.learned = false;
+	    animals.addWord(w1);
+	
+	    Word w2;
+	    w2.english = "dog";
+	    w2.meaning = "a loyal animal often kept as a pet";
+	    w2.ipa = IPA_o;   // /o/ for "dog"
+	    w2.example = "My dog barks at strangers.";
+	    w2.learned = false;
+	    animals.addWord(w2);
+	
+	    // ===== Topic 2: Fruits =====
+	    Topic fruits("Fruits");
+	
+	    Word w3;
+	    w3.english = "apple";
+	    w3.meaning = "a sweet red or green fruit";
+	    w3.ipa = IPA_ae;  // /ae/ for "apple"
+	    w3.example = "I eat an apple every morning.";
+	    w3.learned = false;
+	    fruits.addWord(w3);
+	
+	    Word w4;
+	    w4.english = "orange";
+	    w4.meaning = "a citrus fruit rich in vitamin C";
+	    w4.ipa = IPA_o;  // /o/ for "orange"
+	    w4.example = "He peeled an orange for breakfast.";
+	    w4.learned = false;
+	    fruits.addWord(w4);
+	
+	    topics.push_back(animals);
+	    topics.push_back(fruits);
+}
+
+
+    void showTopics() const {
+        cout << "\n=== Topics ===\n";
+        for (size_t i = 0; i < topics.size(); ++i)
+            cout << i + 1 << ". " << topics[i].getName() << "\n";
     }
 
-    string line;
-    Word currentWord;
-    while (getline(file, line)) {
-        // Bỏ dòng trống hoặc dòng tiêu đề
-        if (line.empty() || line[0] == '#') continue;
-
-        // Nếu dòng bắt đầu bằng "Example:", thì là ví dụ của từ trước
-        if (line.rfind("Example:", 0) == 0) {
-            currentWord.example = line.substr(8); // bỏ "Example:"
-            words.push_back(currentWord);
-            continue;
+    void viewTopicWords() {
+        showTopics();
+        cout << "\nEnter topic number: ";
+        int choice;
+        cin >> choice;
+        if (choice < 1 || choice > (int)topics.size()) {
+            cout << "Invalid topic number.\n";
+            return;
         }
+        topics[choice - 1].showAllWords();
+    }
 
-        // Ngược lại là dòng chứa từ mới: dạng "dog /dɒɡ/ - chó"
-        size_t slash1 = line.find('/');
-        size_t slash2 = line.find('/', slash1 + 1);
-        size_t dash = line.find('-');
-
-        if (slash1 != string::npos && slash2 != string::npos && dash != string::npos) {
-            currentWord.english = line.substr(0, slash1);
-            currentWord.english.erase(currentWord.english.find_last_not_of(" \t") + 1);
-
-            currentWord.ipa = line.substr(slash1, slash2 - slash1 + 1);
-
-            currentWord.vietnam = line.substr(dash + 1);
-            currentWord.vietnam.erase(0, currentWord.vietnam.find_first_not_of(" \t"));
-            currentWord.vietnam.erase(currentWord.vietnam.find_last_not_of(" \t") + 1);
+    void showProgress() {
+        int total = 0, learned = 0;
+        for (const auto& t : topics) {
+            total += t.totalWords();
+            learned += t.countLearned();
         }
+        double percent = total == 0 ? 0.0 : (double)learned / total * 100;
+        cout << "\nProgress:\n";
+        cout << "Learned words: " << learned << "/" << total << " (" << fixed << setprecision(1) << percent << "%)\n";
+        cout << "Words not learned yet:\n";
+        for (const auto& t : topics)
+            t.showUnlearnedWords();
     }
-    file.close();
 
-    cout << "✅ Đã nạp " << words.size() << " từ từ file " << filename << endl;
-}
-
-// In ra toàn bộ từ trong từ điển
-void Dictionary::displayAll() const {
-    for (const auto& w : words) {
-        cout << w.english << " " << w.ipa << " - " << w.vietnam << endl;
-        cout << "   ➤ Example:" << w.example << endl << endl;
+    void markForReview() {
+        cout << "\nEnter word to mark for review: ";
+        string word;
+        cin >> word;
+        time_t now = time(nullptr);
+        string timeStr = ctime(&now);
+        timeStr.pop_back(); // remove '\n'
+        reviewList.push_back({word, timeStr});
+        cout << "Word marked for review at " << timeStr << "\n";
     }
-}
 
-// Tra nghĩa tiếng Anh
-string Dictionary::translate(const string& eng) const {
-    for (const auto& w : words)
-        if (w.english == eng)
-            return w.vietnam;
-    return "Không tìm thấy từ này!";
-}
+    void suggestNextTopic() {
+        cout << "\nSuggested next topic: ";
+        if (!topics.empty())
+            cout << topics[rand() % topics.size()].getName() << "\n";
+        else
+            cout << "No topics available.\n";
+    }
+
+    void menu() {
+        int choice;
+        do {
+            cout << "\n====== Vocabulary App ======\n";
+            cout << "1. Show topics\n";
+            cout << "2. View words in topic\n";
+            cout << "3. Show progress\n";
+            cout << "4. Mark word for review\n";
+            cout << "5. Suggest next topic\n";
+            cout << "0. Exit\n";
+            cout << "Enter your choice: ";
+            cin >> choice;
+			
+			
+			
+			cin.ignore(10000, '\n');
+            switch (choice) {
+                case 1: showTopics(); break;
+                case 2: viewTopicWords(); break;
+                case 3: showProgress(); break;
+                case 4: markForReview(); break;
+                case 5: suggestNextTopic(); break;
+                case 0: cout << "Goodbye!\n"; break;
+                default: cout << "Invalid option.\n";
+            }
+        } while (choice != 0);
+    }
+};
 
 // ===============================
-// Triển khai hàm Topic
-// ===============================
-Topic::Topic(const string& n) : name(n) {}
-
-string Topic::getName() const {
-    return name;
-}
-
-void Topic::showTopic() const {
-    cout << "📘 Chủ đề: " << name << endl;
-    displayAll();
-}
-
-// ===============================
-// Hàm main
+// Main function
 // ===============================
 int main() {
-    cout << "=== VOCAB BY TOPIC ===\n";
-
-    // Quét thư mục hiện tại lấy tất cả file txt (mỗi file = 1 topic)
-    vector<string> topics;
-    for (auto& p : fs::directory_iterator(".")) {
-        if (p.path().extension() == ".txt")
-            topics.push_back(p.path().string());
-    }
-
-    if (topics.empty()) {
-        cout << "❗ Không tìm thấy file chủ đề (.txt) nào!\n";
-        return 0;
-    }
-
-    cout << "Danh sách chủ đề:\n";
-    for (size_t i = 0; i < topics.size(); ++i)
-        cout << i + 1 << ". " << topics[i] << endl;
-
-    cout << "Chọn số thứ tự chủ đề: ";
-    int choice;
-    cin >> choice;
-    cin.ignore();
-
-    if (choice < 1 || choice > (int)topics.size()) {
-        cout << "Lựa chọn không hợp lệ!\n";
-        return 0;
-    }
-
-    string fileName = topics[choice - 1];
-    string topicName = fs::path(fileName).stem().string();
-
-    Topic selected(topicName);
-    selected.loadFromFile(fileName);
-    selected.showTopic();
-
-    // Cho phép tra nghĩa
-    string w;
-    cout << "\nNhập từ tiếng Anh cần tra: ";
-    getline(cin, w);
-    cout << "→ " << selected.translate(w) << endl;
-
+    srand((unsigned)time(0));
+    VocabularyApp app;
+    app.buildSampleData();
+    app.menu();
     return 0;
 }
