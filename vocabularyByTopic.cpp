@@ -6,7 +6,7 @@
 #include <algorithm>
 using namespace std;
 
-
+// show tien do là chuc nang them
 // dua du lieu file txt vào phan chu de khoang 400 tu theo cau truc nhu tren(20 chu de)
 // xuat danh sach tu da luu vao file ra mot file txt 
 
@@ -70,33 +70,31 @@ protected:
         return hash;
     }
 
-    string getIPAString(IPA ipa) const {
-    switch (ipa) {
-        case IPA_ae: return "/ae/";
-        case IPA_i: return "/i/";
-        case IPA_i_long: return "/i:/";
-        case IPA_e: return "/e/";
-        case IPA_a: return "/a/";
-        case IPA_o: return "/o/";
-        case IPA_u: return "/u/";
-        case IPA_uh: return "/?/";
-        case IPA_er: return "/?:/";
-        case IPA_ai: return "/ai/";
-        case IPA_au: return "/au/";
-        case IPA_oi: return "/oi/";
-        case IPA_ei: return "/ei/";
-        case IPA_ou: return "/ou/";
-        case IPA_sh: return "/?/";
-        case IPA_th: return "/?/";
-        case IPA_dh: return "/?/";
-        case IPA_ch: return "/t?/";
-        case IPA_j: return "/d?/";
-        default: return "(unknown)";
-    }
-}
-
-
 public:
+	string getIPAString(IPA ipa) const {
+	    switch (ipa) {
+	        case IPA_ae: return "/ae/";
+	        case IPA_i: return "/i/";
+	        case IPA_i_long: return "/i:/";
+	        case IPA_e: return "/e/";
+	        case IPA_a: return "/a/";
+	        case IPA_o: return "/o/";
+	        case IPA_u: return "/u/";
+	        case IPA_uh: return "/?/";
+	        case IPA_er: return "/?:/";
+	        case IPA_ai: return "/ai/";
+	        case IPA_au: return "/au/";
+	        case IPA_oi: return "/oi/";
+	        case IPA_ei: return "/ei/";
+	        case IPA_ou: return "/ou/";
+	        case IPA_sh: return "/?/";
+	        case IPA_th: return "/?/";
+	        case IPA_dh: return "/?/";
+	        case IPA_ch: return "/t?/";
+	        case IPA_j: return "/d?/";
+	        default: return "(unknown)";
+	    }
+	}
     void addWord(const Word& w) {
         words.push_back(w);
     }
@@ -163,7 +161,9 @@ private:
 
 public:
     Topic(const string& n) : name(n) {}
-
+	const vector<Word>& getWords() const {
+        return words;
+    }
     string getName() const { return name; }
 };
 
@@ -235,21 +235,48 @@ public:
             cout << "Invalid topic number.\n";
             return;
         }
-        topics[choice - 1].showAllWords();
+
+        Topic& selected = topics[choice - 1];
+        const vector<Word>& words = selected.getWords();
+
+        if (words.empty()) {
+            cout << "No words in this topic.\n";
+            return;
+        }
+
+        cout << "\n=== Words in topic: " << selected.getName() << " ===\n";
+        for (size_t i = 0; i < words.size(); ++i)
+            cout << i + 1 << ". " << words[i].english << "\n";
+
+        cout << "\nEnter word number to view details: ";
+        int wordChoice;
+        cin >> wordChoice;
+        if (wordChoice < 1 || wordChoice > (int)words.size()) {
+            cout << "Invalid word number.\n";
+            return;
+        }
+
+        const Word& w = words[wordChoice - 1];
+        cout << "\n=== Word Details ===\n";
+		cout<< "\nWord: " << w.english
+		    << "\nMeaning: " << w.meaning
+		    << "\nIPA: " << selected.getIPAString(w.ipa)
+		    << "\nExample: " << w.example
+		    << "\nStatus: " << (w.learned ? "Learned" : "Not learned")
+		    << "\n---------------------\n";
     }
 
-    void showProgress() {
+ 	void showProgress() {
         int total = 0, learned = 0;
         for (const auto& t : topics) {
             total += t.totalWords();
             learned += t.countLearned();
         }
-        double percent = total == 0 ? 0.0 : (double)learned / total * 100;
-        cout << "\nProgress:\n";
-        cout << "Learned words: " << learned << "/" << total << " (" << fixed << setprecision(1) << percent << "%)\n";
-        cout << "Words not learned yet:\n";
-        for (const auto& t : topics)
-            t.showUnlearnedWords();
+
+        double overallPercent = total == 0 ? 0.0 : (double)learned / total * 100;
+        cout << "\n=== Overall Progress ===\n";
+        cout << "Learned words: " << learned << "/" << total
+             << " (" << fixed << setprecision(1) << overallPercent << "%)\n";
     }
 
     void markForReview() {
