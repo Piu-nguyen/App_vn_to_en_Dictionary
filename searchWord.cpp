@@ -205,11 +205,20 @@ vector<string> Dictionary::suggestWords(const string& keyWord, bool isEnglish) {
 // ===============================
 #ifdef _WIN32
 void speakVoice(const string& text, bool isEnglish) {
-    string voice = isEnglish ? "Microsoft Zira Desktop" : "Microsoft An Desktop"; // tuỳ Windows
-    string command = "powershell -Command \"Add-Type -AssemblyName System.Speech; "
-                     "$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
-                     "$speak.SelectVoice('" + voice + "'); "
-                     "$speak.Speak('" + text + "');\"";
+    string command =
+        "powershell -Command \""
+        "Add-Type -AssemblyName System.Speech; "
+        "$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
+        "$voices = $speak.GetInstalledVoices() | Select-Object -ExpandProperty VoiceInfo | Select -ExpandProperty Name; "
+        "$chosen = ''; "
+        "if (" + string(isEnglish ? "$voices -contains 'Microsoft Zira Desktop'" : "$voices -contains 'Microsoft An Desktop'") + ") { "
+            "$chosen = '" + string(isEnglish ? "Microsoft Zira Desktop" : "Microsoft An Desktop") + "' "
+        "} else { "
+            "$chosen = $voices[0] "
+        "} "
+        "$speak.SelectVoice($chosen); "
+        "$speak.Speak('" + text + "');\"";
+
     system(command.c_str());
 }
 #endif
@@ -240,163 +249,182 @@ int main() {
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
         switch (choice) {
-           
-    // ===============================
-    // CASE 1: English -> Vietnamese
-    // ===============================
-    case 1: {
-        string input;
-        cout << "\nNhập từ (English): ";
-        getline(cin, input);
 
-        Word* result = dict.searchEnglishToVietnamese(input);
-        if (result) {
-            cout << "\nKết quả:\n";
-            cout << "English   : " << result->english << "\n";
-            cout << "Vietnamese: " << result->vietnamese << "\n";
-            cout << "IPA       : " << result->ipaText << "\n";
-            cout << "Example   : " << result->example << "\n";
-            cout << "Topic     : " << result->topic << "\n";
+        // ===============================
+        // CASE 1: English -> Vietnamese
+        // ===============================
+        case 1: {
+            string input;
+            cout << "\nNhập từ (English): ";
+            getline(cin, input);
 
-#ifdef _WIN32
-            int voiceChoice;
-            cout << "\nPhát âm:\n";
-            cout << "1. Voice tiếng Anh\n";
-            cout << "2. Voice tiếng Việt\n";
-            cout << "3. Cả hai (Anh + Việt)\n";
-            cout << "0. Bỏ qua\n";
-            cout << "Chọn: ";
-            cin >> voiceChoice;
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-            switch (voiceChoice) {
-                case 1:
-                    speakVoice(result->english, true);
-                    break;
-                case 2:
-                    speakVoice(result->vietnamese, false);
-                    break;
-                case 3:
-                    speakVoice(result->english, true);
-                    speakVoice(result->vietnamese, false);
-                    break;
-                default:
-                    cout << "Bỏ qua phát âm.\n";
-                    break;
-            }
-
-            char repeat;
-            cout << "\nLặp lại phát âm liên tục? (y/n): ";
-            cin >> repeat;
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            if (repeat == 'y' || repeat == 'Y') {
-                cout << "\n Đang phát lại... (Nhấn Enter để dừng)\n";
-                while (true) {
-                    if (_kbhit() && _getch() == '\r') break;
-                    if (voiceChoice == 1)
-                        speakVoice(result->english, true);
-                    else if (voiceChoice == 2)
-                        speakVoice(result->vietnamese, false);
-                    else if (voiceChoice == 3) {
-                        speakVoice(result->english, true);
-                        speakVoice(result->vietnamese, false);
-                    }
-                }
-            }
-#endif
-        } else {
-            cout << "Không tìm thấy từ \"" << input << "\".\n";
-            auto s = dict.suggestWords(input, true);
-            if (!s.empty()) {
-                cout << "Gợi ý: ";
-                for (size_t i = 0; i < s.size(); ++i)
-                    cout << s[i] << (i < s.size() - 1 ? ", " : "\n");
-            }
-        }
-        break;
-    }
-
-    // ===============================
-    // CASE 2: Vietnamese -> English
-    // ===============================
-    case 2: {
-        string input;
-        cout << "\nNhập từ (Vietnamese): ";
-        getline(cin, input);
-
-        Word* result = dict.searchVietnameseToEnglish(input);
-        if (result) {
-            cout << "\nKết quả:\n";
-            cout << "English   : " << result->english << "\n";
-            cout << "Vietnamese: " << result->vietnamese << "\n";
-            cout << "IPA       : " << result->ipaText << "\n";
-            cout << "Example   : " << result->example << "\n";
-            cout << "Topic     : " << result->topic << "\n";
+            Word* result = dict.searchEnglishToVietnamese(input);
+            if (result) {
+                cout << "\nKết quả:\n";
+                cout << "English   : " << result->english << "\n";
+                cout << "Vietnamese: " << result->vietnamese << "\n";
+                cout << "IPA       : " << result->ipaText << "\n";
+                cout << "Example   : " << result->example << "\n";
+                cout << "Topic     : " << result->topic << "\n";
 
 #ifdef _WIN32
-            int voiceChoice;
-            cout << "\nPhát âm:\n";
-            cout << "1. Voice tiếng Anh\n";
-            cout << "2. Voice tiếng Việt\n";
-            cout << "3. Cả hai (Anh + Việt)\n";
-            cout << "0. Bỏ qua\n";
-            cout << "Chọn: ";
-            cin >> voiceChoice;
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                int voiceChoice;
+                cout << "\nPhát âm:\n";
+                cout << "1. Voice tiếng Anh\n";
+                cout << "2. Voice tiếng Việt\n";
+                cout << "3. Cả hai (Anh + Việt)\n";
+                cout << "0. Bỏ qua\n";
+                cout << "Chọn: ";
+                cin >> voiceChoice;
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
-            switch (voiceChoice) {
-                case 1:
-                    speakVoice(result->english, true);
-                    break;
-                case 2:
-                    speakVoice(result->vietnamese, false);
-                    break;
-                case 3:
-                    speakVoice(result->english, true);
-                    speakVoice(result->vietnamese, false);
-                    break;
-                default:
-                    cout << "Bỏ qua phát âm.\n";
-                    break;
-            }
+                bool skipRepeat = false;
 
-            char repeat;
-            cout << "\nLặp lại phát âm liên tục? (y/n): ";
-            cin >> repeat;
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            if (repeat == 'y' || repeat == 'Y') {
-                cout << "\n Đang phát lại... (Nhấn Enter để dừng)\n";
-                while (true) {
-                    if (_kbhit() && _getch() == '\r') break;
-                    if (voiceChoice == 1)
+                switch (voiceChoice) {
+                    case 1:
                         speakVoice(result->english, true);
-                    else if (voiceChoice == 2)
+                        break;
+                    case 2:
                         speakVoice(result->vietnamese, false);
-                    else if (voiceChoice == 3) {
+                        break;
+                    case 3:
                         speakVoice(result->english, true);
                         speakVoice(result->vietnamese, false);
+                        break;
+                    case 0:
+                        cout << "Bỏ qua phát âm.\n";
+                        skipRepeat = true;
+                        break;
+                    default:
+                        cout << "Lựa chọn không hợp lệ!\n";
+                        skipRepeat = true;
+                        break;
+                }
+
+                if (!skipRepeat) {
+                    char repeat;
+                    cout << "\nLặp lại phát âm liên tục? (y/n): ";
+                    cin >> repeat;
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                    if (repeat == 'y' || repeat == 'Y') {
+                        cout << "\nĐang phát lại... (Nhấn Enter để dừng)\n";
+                        while (true) {
+                            if (_kbhit() && _getch() == '\r') break;
+                            if (voiceChoice == 1)
+                                speakVoice(result->english, true);
+                            else if (voiceChoice == 2)
+                                speakVoice(result->vietnamese, false);
+                            else if (voiceChoice == 3) {
+                                speakVoice(result->english, true);
+                                speakVoice(result->vietnamese, false);
+                            }
+                        }
                     }
                 }
-            }
 #endif
-        } else {
-            cout << "Không tìm thấy từ \"" << input << "\".\n";
-            auto s = dict.suggestWords(input, false);
-            if (!s.empty()) {
-                cout << "Gợi ý: ";
-                for (size_t i = 0; i < s.size(); ++i)
-                    cout << s[i] << (i < s.size() - 1 ? ", " : "\n");
+            } else {
+                cout << "Không tìm thấy từ \"" << input << "\".\n";
+                auto s = dict.suggestWords(input, true);
+                if (!s.empty()) {
+                    cout << "Gợi ý: ";
+                    for (size_t i = 0; i < s.size(); ++i)
+                        cout << s[i] << (i < s.size() - 1 ? ", " : "\n");
+                }
             }
+            break;
         }
-        break;
-    }
-            case 0:
-                cout << "Cảm ơn bạn đã sử dụng từ điển!\n";
-                return 0;
 
-            default:
-                cout << "Lựa chọn không hợp lệ!\n";
-                break;
+        // ===============================
+        // CASE 2: Vietnamese -> English
+        // ===============================
+        case 2: {
+            string input;
+            cout << "\nNhập từ (Vietnamese): ";
+            getline(cin, input);
+
+            Word* result = dict.searchVietnameseToEnglish(input);
+            if (result) {
+                cout << "\nKết quả:\n";
+                cout << "English   : " << result->english << "\n";
+                cout << "Vietnamese: " << result->vietnamese << "\n";
+                cout << "IPA       : " << result->ipaText << "\n";
+                cout << "Example   : " << result->example << "\n";
+                cout << "Topic     : " << result->topic << "\n";
+
+#ifdef _WIN32
+                int voiceChoice;
+                cout << "\nPhát âm:\n";
+                cout << "1. Voice tiếng Anh\n";
+                cout << "2. Voice tiếng Việt\n";
+                cout << "3. Cả hai (Anh + Việt)\n";
+                cout << "0. Bỏ qua\n";
+                cout << "Chọn: ";
+                cin >> voiceChoice;
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+                bool skipRepeat = false;
+
+                switch (voiceChoice) {
+                    case 1:
+                        speakVoice(result->english, true);
+                        break;
+                    case 2:
+                        speakVoice(result->vietnamese, false);
+                        break;
+                    case 3:
+                        speakVoice(result->english, true);
+                        speakVoice(result->vietnamese, false);
+                        break;
+                    case 0:
+                        cout << "Bỏ qua phát âm.\n";
+                        skipRepeat = true;
+                        break;
+                    default:
+                        cout << "Lựa chọn không hợp lệ!\n";
+                        skipRepeat = true;
+                        break;
+                }
+
+                if (!skipRepeat) {
+                    char repeat;
+                    cout << "\nLặp lại phát âm liên tục? (y/n): ";
+                    cin >> repeat;
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                    if (repeat == 'y' || repeat == 'Y') {
+                        cout << "\nĐang phát lại... (Nhấn Enter để dừng)\n";
+                        while (true) {
+                            if (_kbhit() && _getch() == '\r') break;
+                            if (voiceChoice == 1)
+                                speakVoice(result->english, true);
+                            else if (voiceChoice == 2)
+                                speakVoice(result->vietnamese, false);
+                            else if (voiceChoice == 3) {
+                                speakVoice(result->english, true);
+                                speakVoice(result->vietnamese, false);
+                            }
+                        }
+                    }
+                }
+#endif
+            } else {
+                cout << "Không tìm thấy từ \"" << input << "\".\n";
+                auto s = dict.suggestWords(input, false);
+                if (!s.empty()) {
+                    cout << "Gợi ý: ";
+                    for (size_t i = 0; i < s.size(); ++i)
+                        cout << s[i] << (i < s.size() - 1 ? ", " : "\n");
+                }
+            }
+            break;
+        }
+
+        case 0:
+            cout << "Cảm ơn bạn đã sử dụng từ điển!\n";
+            return 0;
+
+        default:
+            cout << "Lựa chọn không hợp lệ!\n";
+            break;
         }
     }
     return 0;
