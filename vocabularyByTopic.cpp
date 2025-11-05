@@ -4,11 +4,18 @@
 #include <ctime>
 #include <iomanip>
 #include <algorithm>
+#include <fstream>
+#include <sstream>    
+#include <dirent.h>
 using namespace std;
 
-// show tien do là chuc nang them
-// dua du lieu file txt vào phan chu de khoang 400 tu theo cau truc nhu tren(20 chu de)
-// xuat danh sach tu da luu vao file ra mot file txt 
+// trong phan chon muc so th́ phai bat nhap lai khi nhap chu
+// chuc nang so 1 se bo vi no bi thua 
+// su ly phan IPA
+// show tien do lï¿½ chuc nang them(chinh sua lai phan trang thai)
+// dua du lieu file txt vï¿½o phan chu de khoang 400 tu theo cau truc nhu tren(20 chu de)
+// xuat danh sach tu da luu vao file ra mot file txt(su ly luu cĂ¹ng má»™t tá»« 2 láº§n)
+// su ly static khi chon vo lï¿½ thanh da hoc
 
 // ===============================
 // Enum for IPA symbols
@@ -177,48 +184,61 @@ private:
 
 public:
 	void buildSampleData() {
-    // ===== Topic 1: Animals =====
-	    Topic animals("Animals");
-	
-	    Word w1;
-	    w1.english = "cat";
-	    w1.meaning = "a small domesticated animal";
-	    w1.ipa = IPA_ae;  // /ae/ for "cat"
-	    w1.example = "The cat is sleeping on the sofa.";
-	    w1.learned = false;
-	    animals.addWord(w1);
-	
-	    Word w2;
-	    w2.english = "dog";
-	    w2.meaning = "a loyal animal often kept as a pet";
-	    w2.ipa = IPA_o;   // /o/ for "dog"
-	    w2.example = "My dog barks at strangers.";
-	    w2.learned = false;
-	    animals.addWord(w2);
-	
-	    // ===== Topic 2: Fruits =====
-	    Topic fruits("Fruits");
-	
-	    Word w3;
-	    w3.english = "apple";
-	    w3.meaning = "a sweet red or green fruit";
-	    w3.ipa = IPA_ae;  // /ae/ for "apple"
-	    w3.example = "I eat an apple every morning.";
-	    w3.learned = false;
-	    fruits.addWord(w3);
-	
-	    Word w4;
-	    w4.english = "orange";
-	    w4.meaning = "a citrus fruit rich in vitamin C";
-	    w4.ipa = IPA_o;  // /o/ for "orange"
-	    w4.example = "He peeled an orange for breakfast.";
-	    w4.learned = false;
-	    fruits.addWord(w4);
-	
-	    topics.push_back(animals);
-	    topics.push_back(fruits);
-}
+	    string folderPath = "D:\\List of subjects by section\\Object-oriented programming\\largeExercise\\Data";
 
+	    topics.clear();              // Clear existing topics first
+	
+	    DIR *dir;
+	    struct dirent *ent;
+	
+	    // Try to open directory
+	    if ((dir = opendir(folderPath.c_str())) != NULL) {
+	        while ((ent = readdir(dir)) != NULL) {
+	            string fileName = ent->d_name;
+	
+	            // Skip "." and ".." and only process CSV files
+	            if (fileName.find(".csv") != string::npos) {
+	                string topicName = fileName.substr(0, fileName.find(".csv"));
+	                Topic topic(topicName);
+	
+	                string fullPath = folderPath + "/" + fileName;
+	                ifstream file(fullPath.c_str());  // use .c_str() for Dev-C++
+	                if (!file.is_open()) {
+	                    cout << "Cannot open file: " << fullPath << endl;
+	                    continue;
+	                }
+	
+	                string line;
+	                getline(file, line); // skip header line
+	
+	                while (getline(file, line)) {
+	                    stringstream ss(line);
+	                    string english, meaning, ipaStr, example;
+	
+	                    getline(ss, english, ',');
+	                    getline(ss, meaning, ',');
+	                    getline(ss, ipaStr, ',');
+	                    getline(ss, example);
+	
+	                    Word w;
+	                    w.english = english;
+	                    w.meaning = meaning;
+	                    w.ipa = IPA_i;
+	                    w.example = example;
+	                    w.learned = false;
+	
+	                    topic.addWord(w);
+	                }
+	
+	                topics.push_back(topic);
+	                file.close();
+	            }
+	        }
+	        closedir(dir);
+	    } else {
+	        cout << "Failed to open data folder!" << endl;
+	    }
+	}
 
     void showTopics() const {
         cout << "\n=== Topics ===\n";
@@ -279,17 +299,146 @@ public:
              << " (" << fixed << setprecision(1) << overallPercent << "%)\n";
     }
 
-    void markForReview() {
-        cout << "\nEnter word to mark for review: ";
-        string word;
-        cin >> word;
-        time_t now = time(nullptr);
-        string timeStr = ctime(&now);
-        timeStr.pop_back(); // remove '\n'
-        reviewList.push_back({word, timeStr});
-        cout << "Word marked for review at " << timeStr << "\n";
-    }
-
+	void markForReview() {
+	    cout << "\nEnter word to mark for review: ";
+	    string word;
+	    cin >> word;
+	
+	    // Get current time
+	    time_t now = time(nullptr);
+	    string timeStr = ctime(&now);
+	    if (!timeStr.empty() && timeStr.back() == '\n') timeStr.pop_back();
+	
+	    string meaning = "N/A";
+	    string ipaStr = "N/A";
+	    string example = "N/A";
+	    bool found = false;
+	
+	    // Search for the word in all topics
+	    for (const auto& topic : topics) {
+	        for (const auto& w : topic.getWords()) {
+	            if (w.english == word) {
+	                meaning = w.meaning;
+	                ipaStr = topic.getIPAString(w.ipa);
+	                example = w.example;
+	                found = true;
+	                break;
+	            }
+	        }
+	        if (found) break;
+	    }
+	
+	    if (!found) {
+	        cout << "Word not found in any topic.\n";
+	        return;
+	    }
+	
+	    string filePath = "ReviewList.csv";
+	
+	    // CHECK IF WORD ALREADY EXISTS IN CSV FILE
+	    bool wordExists = false;
+	    ifstream checkFile(filePath);
+	    if (checkFile.is_open()) {
+	        string line;
+	        // Skip header
+	        if (getline(checkFile, line)) {
+	            while (getline(checkFile, line)) {
+	                if (!line.empty()) {
+	                    // Extract word from CSV line (second column)
+	                    size_t firstComma = line.find(',');
+	                    if (firstComma != string::npos) {
+	                        size_t secondComma = line.find(',', firstComma + 1);
+	                        if (secondComma != string::npos) {
+	                            string existingWord = line.substr(firstComma + 1, secondComma - firstComma - 1);
+	                            // Remove extra spaces
+	                            existingWord.erase(0, existingWord.find_first_not_of(" \t"));
+	                            existingWord.erase(existingWord.find_last_not_of(" \t") + 1);
+	                            
+	                            if (existingWord == word) {
+	                                wordExists = true;
+	                                break;
+	                            }
+	                        }
+	                    }
+	                }
+	            }
+	        }
+	        checkFile.close();
+	    }
+	
+	    // PREVENT DUPLICATE SAVING
+	    if (wordExists) {
+	        cout << "This word '" << word << "' is already in your review list.\n";
+	        cout << "Recommendation: You can review it in your existing list instead of adding it again.\n";
+	        return;
+	    }
+	
+	    // Check if file exists
+	    bool fileExists = false;
+	    ifstream checkFile2(filePath);
+	    if (checkFile2.is_open()) {
+	        fileExists = true;
+	        checkFile2.close();
+	    }
+	
+	    // Count existing lines for index
+	    int index = 1;
+	    ifstream fin(filePath);
+	    if (fin.is_open()) {
+	        string line;
+	        if (getline(fin, line)) {
+	            while (getline(fin, line)) {
+	                if (!line.empty()) index++;
+	            }
+	        }
+	        fin.close();
+	    }
+	
+	    // Open file for appending
+	    ofstream fout(filePath, ios::app);
+	    if (!fout.is_open()) {
+	        cout << "Error: Cannot create or open ReviewList.csv\n";
+	        return;
+	    }
+	
+	    // Write header if new file with width adjustment
+	    if (!fileExists) {
+	        fout << setw(4) << "No" << ","
+	             << setw(15) << left << "Word" << ","
+	             << setw(20) << left << "Meaning" << ","
+	             << setw(10) << left << "IPA" << ","
+	             << setw(50) << left << "Example" << ","  // Reduced to reasonable width
+	             << setw(25) << left << "Time" << "\n";
+	        index = 1;
+	    }
+	
+	    // Function to escape and limit length
+	    auto formatField = [](const string& s, int maxLength = 0) {
+	        string r = s;
+	        // Replace commas to avoid breaking CSV structure
+	        for (auto& ch : r) if (ch == ',') ch = ';';
+	        
+	        // Limit length if needed
+	        if (maxLength > 0 && r.length() > maxLength) {
+	            r = r.substr(0, maxLength - 3) + "...";
+	        }
+	        return r;
+	    };
+	
+	    // Write data with width adjustment
+	    fout << setw(4) << index << ","
+	         << setw(15) << left << formatField(word, 15) << ","
+	         << setw(20) << left << formatField(meaning, 20) << ","
+	         << setw(10) << left << formatField(ipaStr, 10) << ","
+	         << setw(50) << left << formatField(example, 50) << ","  // Example width 50 characters
+	         << setw(25) << left << formatField(timeStr, 25) << "\n";
+	
+	    fout.close();
+	
+	    cout << "SUCCESS: Word '" << word << "' has been added to your review list.\n";
+	    cout << "File saved as: ReviewList.csv in your program directory.\n";
+	    cout << "Recommendation: Review these words regularly for better retention.\n";
+	}	
     void suggestNextTopic() {
         cout << "\nSuggested next topic: ";
         if (!topics.empty())
@@ -302,11 +451,10 @@ public:
         int choice;
         do {
             cout << "\n====== Vocabulary App ======\n";
-            cout << "1. Show topics\n";
-            cout << "2. View words in topic\n";
-            cout << "3. Show progress\n";
-            cout << "4. Mark word for review\n";
-            cout << "5. Suggest next topic\n";
+            cout << "1. View words in topic\n";
+            cout << "2. Show progress\n";
+            cout << "3. Mark word for review\n";
+            cout << "4. Suggest next topic\n";
             cout << "0. Exit\n";
             cout << "Enter your choice: ";
             cin >> choice;
@@ -315,11 +463,10 @@ public:
 			
 			cin.ignore(10000, '\n');
             switch (choice) {
-                case 1: showTopics(); break;
-                case 2: viewTopicWords(); break;
-                case 3: showProgress(); break;
-                case 4: markForReview(); break;
-                case 5: suggestNextTopic(); break;
+                case 1: viewTopicWords(); break;
+                case 2: showProgress(); break;
+                case 3: markForReview(); break;
+                case 4: suggestNextTopic(); break;
                 case 0: cout << "Goodbye!\n"; break;
                 default: cout << "Invalid option.\n";
             }
