@@ -164,13 +164,20 @@ void Dictionary::learnGrammars() {
         cout << "5  Past Simple\n6  Past Continuous\n7  Past Perfect\n8  Past Perfect Continuous\n";
         cout << "9  Future Simple\n10 Future Continuous\n11 Future Perfect\n12 Future Perfect Continuous\n";
         cout << "0  Thoát\n";
-        cout << "Chọn số (0-12): ";
-        if (!(cin >> choice)) {
-            cin.clear();
-            cin.ignore(10000, '\n');
-            continue;
+
+        // --- Sửa lỗi nhập chữ ---
+        while (true) {
+            cout << "Chọn số (0-12): ";
+            string line;
+            getline(cin, line);
+            try {
+                choice = stoi(line);
+                break;
+            } catch (...) {
+                cout << "Vui lòng nhập số hợp lệ.\n";
+            }
         }
-        cin.ignore(10000, '\n');
+
         if (choice == 0) break;
 
         string tense = getTenseName(choice);
@@ -217,10 +224,18 @@ void Dictionary::grammarQuiz(const vector<Question>& questions) {
         for (size_t j = 0; j < qs[i].options.size(); ++j)
             cout << "  " << j + 1 << ". " << qs[i].options[j] << "\n";
 
-        int ans;
-        cout << "Chọn (1-4): ";
-        cin >> ans;
-        cin.ignore(10000, '\n');
+        // --- Sửa lỗi nhập chữ ---
+        int ans = 0;
+        while (true) {
+            cout << "Chọn (1-4): ";
+            string tmp; getline(cin, tmp);
+            try {
+                ans = stoi(tmp);
+                if (ans >= 1 && ans <= 4) break;
+            } catch (...) {}
+            cout << "Vui lòng nhập số từ 1 đến 4.\n";
+        }
+
         if (ans == qs[i].correct) {
             cout << "Đúng!\n";
             score++;
@@ -235,7 +250,6 @@ void Dictionary::grammarQuiz(const vector<Question>& questions) {
 // ===============================
 // HÀM ĐỌC FILE ÔN TẬP
 // ===============================
-// Thay thế toàn bộ hàm loadPracticeFile bằng hàm này
 bool Dictionary::loadPracticeFile(const string& filename) {
     ifstream f(filename);
     if (!f.is_open()) return false;
@@ -244,7 +258,6 @@ bool Dictionary::loadPracticeFile(const string& filename) {
     PracticeTest cur;
     enum State { OUT, IN_MCQ, IN_GAP, IN_REARR } state = OUT;
 
-    // helper: trim cả hai đầu
     auto trim = [](string &s) {
         while (!s.empty() && isspace((unsigned char)s.front())) s.erase(s.begin());
         while (!s.empty() && isspace((unsigned char)s.back())) s.pop_back();
@@ -276,7 +289,6 @@ bool Dictionary::loadPracticeFile(const string& filename) {
                 curq.question = line;
                 step = 1;
             } else if (step >= 1 && step <= 4) {
-                // nếu dòng có "A. " hoặc "1. " thì lấy từ sau khoảng 3 ký tự trở đi giống cũ
                 if (line.size() > 3 && line[1] == '.') curq.options.push_back(line.substr(3));
                 else if (line.size() > 3) curq.options.push_back(line.substr(3));
                 else curq.options.push_back(line);
@@ -287,7 +299,6 @@ bool Dictionary::loadPracticeFile(const string& filename) {
                 step = 0;
             }
         } else if (state == IN_GAP) {
-            // hỗ trợ nhiều định dạng: " ... = answer | hint", " ... = answer (hint)", " ... = answer"
             size_t p_eq = line.find('=');
             if (p_eq != string::npos) {
                 GapFill g;
@@ -297,14 +308,12 @@ bool Dictionary::loadPracticeFile(const string& filename) {
                 trim(left); trim(right);
                 g.question = left;
 
-                // nếu có '|'
                 size_t p_bar = right.find('|');
                 if (p_bar != string::npos) {
                     g.answer = right.substr(0, p_bar);
                     g.hint = right.substr(p_bar + 1);
                     trim(g.answer); trim(g.hint);
                 } else {
-                    // nếu có '(' ... ')'
                     size_t p_par = right.find('(');
                     if (p_par != string::npos) {
                         size_t p_par_end = right.find(')', p_par);
@@ -317,7 +326,6 @@ bool Dictionary::loadPracticeFile(const string& filename) {
                         }
                         trim(g.answer); trim(g.hint);
                     } else {
-                        // chỉ có answer
                         g.answer = right;
                         trim(g.answer);
                         g.hint = "";
@@ -343,9 +351,8 @@ bool Dictionary::loadPracticeFile(const string& filename) {
     return true;
 }
 
-
 // ===============================
-// ÔN TẬP GRAMMAR TỔNG HỢP (ĐÃ SỬA)
+// ÔN TẬP GRAMMAR TỔNG HỢP
 // ===============================
 void Dictionary::practiceTest() {
     if (practiceTests.empty()) {
@@ -364,9 +371,18 @@ void Dictionary::practiceTest() {
         cout << "\n" << q.question << "\n";
         for (size_t i = 0; i < q.options.size(); ++i)
             cout << "  " << i + 1 << ". " << q.options[i] << "\n";
-        int ans;
-        cout << "Chọn (1-4): ";
-        cin >> ans; cin.ignore(10000, '\n');
+
+        int ans = 0;
+        while (true) {
+            cout << "Chọn (1-4): ";
+            string tmp; getline(cin, tmp);
+            try {
+                ans = stoi(tmp);
+                if (ans >= 1 && ans <= 4) break;
+            } catch (...) {}
+            cout << "Vui lòng nhập số từ 1 đến 4.\n";
+        }
+
         if (ans == q.answer) { cout << "Đúng!\n"; score++; }
         else cout << "Sai! Đáp án đúng: " << q.answer << ". " << q.options[q.answer - 1] << "\n";
         total++;
@@ -454,8 +470,20 @@ int main() {
         cout << "1. Học 12 thì\n";
         cout << "2. Ôn tập Grammar tổng hợp\n";
         cout << "0. Thoát\n";
-        cout << "Chọn: ";
-        int c; cin >> c; cin.ignore(10000, '\n');
+
+        int c;
+        while (true) {
+            cout << "Chọn: ";
+            string line;
+            getline(cin, line);
+            try {
+                c = stoi(line);
+                break;
+            } catch (...) {
+                cout << "Vui lòng nhập số hợp lệ.\n";
+            }
+        }
+
         if (c == 1) dict.learnGrammars();
         else if (c == 2) dict.practiceTest();
         else if (c == 0) break;
