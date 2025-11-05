@@ -34,6 +34,16 @@ struct Word {
 };
 
 // ===============================
+// Node cho cây BST
+// ===============================
+struct Node {
+    Word data;
+    Node* left;
+    Node* right;
+    Node(const Word& w) : data(w), left(NULL), right(NULL) {}
+};
+
+// ===============================
 // Hàm loại khoảng trắng thừa
 // ===============================
 string trim(const string& s) {
@@ -112,13 +122,65 @@ string ipaToString(Ipa ipa) {
 }
 
 // ===============================
-// Class Dictionary
+// Class Dictionary (dùng BST)
 // ===============================
 class Dictionary {
 private:
+    Node* rootEng;
+    Node* rootVie;
     vector<Word> wordList;
 
+    Node* insert(Node* root, const Word& w, bool isEnglish) {
+        string key = normalize(isEnglish ? w.english : w.vietnamese);
+        if (root == NULL)
+            return new Node(w);
+
+        string rootKey = normalize(isEnglish ? root->data.english : root->data.vietnamese);
+        if (key < rootKey)
+            root->left = insert(root->left, w, isEnglish);
+        else if (key > rootKey)
+            root->right = insert(root->right, w, isEnglish);
+        return root;
+    }
+
+    Word* search(Node* root, const string& key, bool isEnglish) {
+        if (root == NULL) return NULL;
+        string rootKey = normalize(isEnglish ? root->data.english : root->data.vietnamese);
+        if (key == rootKey)
+            return &root->data;
+        else if (key < rootKey)
+            return search(root->left, key, isEnglish);
+        else
+            return search(root->right, key, isEnglish);
+    }
+
+    void suggest(Node* root, const string& key, bool isEnglish, vector<string>& result, int limit) {
+        if (root == NULL || (int)result.size() >= limit) return;
+        string word = normalize(isEnglish ? root->data.english : root->data.vietnamese);
+        if (word.find(key) != string::npos)
+            result.push_back(isEnglish ? root->data.english : root->data.vietnamese);
+        suggest(root->left, key, isEnglish, result, limit);
+        suggest(root->right, key, isEnglish, result, limit);
+    }
+
+    void clear(Node* root) {
+        if (root == NULL) return;
+        clear(root->left);
+        clear(root->right);
+        delete root;
+    }
+
 public:
+    Dictionary() {
+        rootEng = NULL;
+        rootVie = NULL;
+    }
+
+    ~Dictionary() {
+        clear(rootEng);
+        clear(rootVie);
+    }
+
     bool loadFromFile(const string& fileName);
     Word* searchEnglishToVietnamese(const string& keyWord);
     Word* searchVietnameseToEnglish(const string& keyWord);
@@ -126,7 +188,7 @@ public:
 };
 
 // ===============================
-// Load dữ liệu
+// Load dữ liệu vào BST
 // ===============================
 bool Dictionary::loadFromFile(const string& fileName) {
     ifstream file(fileName.c_str());
@@ -156,32 +218,26 @@ bool Dictionary::loadFromFile(const string& fileName) {
         w.ipa = getIpaFromText(w.ipaText);
 
         wordList.push_back(w);
+        rootEng = insert(rootEng, w, true);
+        rootVie = insert(rootVie, w, false);
     }
 
     file.close();
-    cout << "Đã nạp " << wordList.size() << " từ vào từ điển.\n";
+    cout << "Đã nạp " << wordList.size() << " từ vào cây BST.\n";
     return true;
 }
 
 // ===============================
-// Tìm kiếm
+// Tìm kiếm BST
 // ===============================
 Word* Dictionary::searchEnglishToVietnamese(const string& keyWord) {
     string key = normalize(trim(keyWord));
-    for (size_t i = 0; i < wordList.size(); ++i) {
-        if (normalize(wordList[i].english) == key)
-            return &wordList[i];
-    }
-    return NULL;
+    return search(rootEng, key, true);
 }
 
 Word* Dictionary::searchVietnameseToEnglish(const string& keyWord) {
     string key = normalize(trim(keyWord));
-    for (size_t i = 0; i < wordList.size(); ++i) {
-        if (normalize(wordList[i].vietnamese) == key)
-            return &wordList[i];
-    }
-    return NULL;
+    return search(rootVie, key, false);
 }
 
 // ===============================
@@ -190,13 +246,7 @@ Word* Dictionary::searchVietnameseToEnglish(const string& keyWord) {
 vector<string> Dictionary::suggestWords(const string& keyWord, bool isEnglish) {
     string key = normalize(keyWord);
     vector<string> suggestions;
-    for (size_t i = 0; i < wordList.size(); ++i) {
-        string word = isEnglish ? normalize(wordList[i].english) : normalize(wordList[i].vietnamese);
-        if (word.find(key) != string::npos) {
-            suggestions.push_back(isEnglish ? wordList[i].english : wordList[i].vietnamese);
-        }
-        if (suggestions.size() >= 10) break;
-    }
+    suggest(isEnglish ? rootEng : rootVie, key, isEnglish, suggestions, 10);
     return suggestions;
 }
 
@@ -205,6 +255,8 @@ vector<string> Dictionary::suggestWords(const string& keyWord, bool isEnglish) {
 // ===============================
 #ifdef _WIN32
 void speakVoice(const string& text, bool isEnglish) {
+     string safeText = text;
+    replace(safeText.begin(), safeText.end(), '\'', ' '); 
     string command =
         "powershell -Command \""
         "Add-Type -AssemblyName System.Speech; "
@@ -222,7 +274,6 @@ void speakVoice(const string& text, bool isEnglish) {
     system(command.c_str());
 }
 #endif
-
 // ===============================
 // MAIN
 // ===============================
