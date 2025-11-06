@@ -266,6 +266,35 @@ void speakVoice(const string& text) {
     system(command.c_str());
 }
 #endif
+void saveHistory(const string& word) {
+    ofstream file("history.txt", ios::app); // ghi nối tiếp
+    if (file.is_open()) {
+        file << word << endl;
+        file.close();
+    }
+}
+
+vector<string> loadHistory(int limit = 5) {
+    vector<string> history;
+    ifstream file("history.txt");
+    if (!file.is_open()) return history;
+
+    string line;
+    vector<string> all;
+    while (getline(file, line)) {
+        line = trim(line);
+        if (!line.empty())
+            all.push_back(line);
+    }
+    file.close();
+
+    // Lấy 5 từ cuối (gần nhất)
+    int start = max(0, (int)all.size() - limit);
+    for (int i = start; i < (int)all.size(); ++i)
+        history.push_back(all[i]);
+
+    return history;
+}
 
 // ===============================
 // MAIN
@@ -465,3 +494,4 @@ int main() {
 
     return 0;
 }
+
