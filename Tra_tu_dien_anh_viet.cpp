@@ -5,8 +5,7 @@
 #include <algorithm>
 #include <random>
 #include <ctime>
-#include <stack>
-#include <queue>
+#include <cctype>
 using namespace std;
 
 // ===============================
@@ -15,436 +14,304 @@ using namespace std;
 enum IPA { IPA_ae };
 
 // ===============================
-// Struct Word: từ vựng chung
+// Struct Word
 // ===============================
 struct Word {
-    string engLish;
-    string vietNam;
+    string engLish, vietNam, example;
     IPA ipa;
-    string example;
-    int reviewCount = 0; // số lần đã ôn
+    int exp = 0;
+    bool isNew = true;
+
+    // Constructor đầy đủ để tránh lỗi khởi tạo
+    Word(const string& e = "", const string& v = "", IPA i = IPA_ae,
+         const string& ex = "", int xp = 0, bool n = true)
+        : engLish(e), vietNam(v), ipa(i), example(ex), exp(xp), isNew(n) {}
 };
 
 // ===============================
-// Dictionary: chứa toàn bộ từ vựng
+// Class Dictionary
 // ===============================
 class Dictionary {
-protected:
+private:
     vector<Word> words;
-
-    string getIPAString(IPA ipa) const {
-        switch (ipa) {
-            case IPA_ae: return "/æ/";
-            default: return "(unknown)";
-        }
-    }
-
 public:
+    string getIPAString(IPA ipa) const {
+        return ipa == IPA_ae ? "/æ/" : "(unknown)";
+    }
     void addWord(const Word& w) { words.push_back(w); }
     const vector<Word>& getWords() const { return words; }
-
-    void showAllWords() const {
-        cout << "===== TỪ ĐIỂN CHUNG =====\n";
-        for (auto& w : words) {
+    vector<Word>& getWords() { return words; }
+    void showAllWords(const string& title = "TỪ ĐIỂN") const {
+        cout << "===== " << title << " =====\n";
+        for (const auto& w : words)
             cout << w.engLish << " - " << w.vietNam
                  << " | IPA: " << getIPAString(w.ipa)
                  << " | Example: " << w.example << "\n";
-        }
+        if (words.empty()) cout << "(Trống)\n";
     }
 };
 
 // ===============================
-// Topic: gom nhóm từ theo chủ đề
+// Class Topic
 // ===============================
 class Topic : public Dictionary {
-protected:
+private:
     string name;
 public:
     Topic(const string& n = "") : name(n) {}
     string getName() const { return name; }
-    void setName(const string& n) { name = n; }
-
-    void showTopicWords() const {
-        cout << "===== Chủ đề: " << name << " =====\n";
-        showAllWords();
-    }
+    void showTopicWords() const { showAllWords("Chủ đề: " + name); }
 };
 
 // ===============================
-// Account: lưu từ vựng cá nhân + đăng ký/đăng nhập bằng file
+// Class Account
 // ===============================
 class Account : public Topic {
-protected:
-    string username;
-    string password;
+private:
+    string username, password;
     bool isLoggedIn = false;
-    vector<Word> savedWords;           // kho từ cá nhân (lịch sử lưu)
-    const string filename = "accounts.txt"; // file lưu tài khoản
+    vector<Word> savedWords;
+    const string accountFile = "accounts.txt";
+    string getUserWordFile() const { return username + "_words.txt"; }
 
-    string getIPAString(IPA ipa) const {
-        switch (ipa) {
-            case IPA_ae: return "/æ/";
-            default: return "(unknown)";
+protected:
+    void saveWordsToFile() const {
+        const char D = '|';
+        ofstream f(getUserWordFile());
+        if (!f) return;
+        for (const auto& w : savedWords)
+            f << w.engLish << D << w.vietNam << D
+              << static_cast<int>(w.ipa) << D << w.example << D
+              << w.exp << D << (w.isNew ? "1" : "0") << "\n";
+    }
+
+    void loadSavedWords() {
+        const char D = '|';
+        savedWords.clear();
+        ifstream f(getUserWordFile());
+        if (!f) return;
+        string line;
+        while (getline(f, line)) {
+            size_t p[6]; p[0] = line.find(D);
+            for (int i = 1; i < 6; ++i) p[i] = line.find(D, p[i-1] + 1);
+            if (p[5] == string::npos) continue;
+            Word w;
+            w.engLish = line.substr(0, p[0]);
+            w.vietNam = line.substr(p[0]+1, p[1]-p[0]-1);
+            w.ipa = static_cast<IPA>(stoi(line.substr(p[1]+1, p[2]-p[1]-1)));
+            w.example = line.substr(p[2]+1, p[3]-p[2]-1);
+            w.exp = stoi(line.substr(p[3]+1, p[4]-p[3]-1));
+            w.isNew = (line.substr(p[4]+1, p[5]-p[4]-1) == "1");
+            savedWords.push_back(w);
         }
     }
 
 public:
-    Account(const string& u="", const string& p="") : username(u), password(p) {}
+    Account(const string& topicName = "") : Topic(topicName) {}
 
-    // Đăng ký -> lưu username/password vào file
     bool signUp() {
-        cout << "\n=== ĐĂNG KÝ ===\n";
-        cout << "Tên đăng nhập: ";
-        getline(cin, username);
-        cout << "Mật khẩu: ";
-        getline(cin, password);
-
-        // kiểm tra trùng
-        ifstream inFile(filename);
-        string u, p;
-        while (inFile >> u >> p) {
-            if (u == username) {
-                cout << "❌ Tên đăng nhập đã tồn tại!\n";
-                return false;
-            }
-        }
-        inFile.close();
-
-        // ghi thêm vào file
-        ofstream outFile(filename, ios::app);
-        if (outFile) {
-            outFile << username << " " << password << "\n";
-            cout << "✅ Đăng ký thành công!\n";
-            return true;
-        } else {
-            cout << "❌ Không thể ghi vào file.\n";
-            return false;
-        }
+        cout << "\n=== ĐĂNG KÝ ===\nTên: "; getline(cin, username);
+        cout << "Mật khẩu: "; getline(cin, password);
+        if (username.empty() || password.empty()) return cout << "Không để trống!\n", false;
+        ifstream in(accountFile);
+        string u, p; while (in >> u >> p) if (u == username) return cout << "Tên đã tồn tại!\n", false;
+        in.close();
+        ofstream out(accountFile, ios::app);
+        if (out) { out << username << " " << password << "\n"; cout << "Đăng ký thành công!\n"; return true; }
+        return cout << "Lỗi file!\n", false;
     }
 
-    // Đăng nhập -> đọc file và kiểm tra
     bool login() {
-        cout << "\n=== ĐĂNG NHẬP ===\n";
-        cout << "Tên đăng nhập: ";
-        getline(cin, username);
-        cout << "Mật khẩu: ";
-        getline(cin, password);
-
-        ifstream inFile(filename);
-        if (!inFile) {
-            cout << "❌ Chưa có tài khoản nào.\n";
-            return false;
-        }
-
-        string u, p;
-        while (inFile >> u >> p) {
-            if (u == username && p == password) {
-                cout << "✅ Đăng nhập thành công! Xin chào, " << username << "!\n";
-                isLoggedIn = true;
-                return true;
-            }
-        }
-
-        cout << "❌ Sai tên đăng nhập hoặc mật khẩu.\n";
-        return false;
+        cout << "\n=== ĐĂNG NHẬP ===\nTên: "; getline(cin, username);
+        cout << "Mật khẩu: "; getline(cin, password);
+        ifstream in(accountFile);
+        if (!in) return cout << "Chưa có tài khoản!\n", false;
+        string u, p; while (in >> u >> p)
+            if (u == username && p == password) { isLoggedIn = true; loadSavedWords(); cout << "Chào, " << username << "!\n"; return true; }
+        return cout << "Sai thông tin!\n", false;
     }
 
-    // Đăng xuất
     void logout() {
-        if (isLoggedIn) {
-            isLoggedIn = false;
-            cout << "👋 Đăng xuất thành công!\n";
-        } else {
-            cout << "Bạn chưa đăng nhập.\n";
-        }
+        if (isLoggedIn) { saveWordsToFile(); isLoggedIn = false; savedWords.clear(); cout << "Đăng xuất!\n"; }
+        else cout << "Chưa đăng nhập.\n";
     }
 
-    // Lưu từ vựng từ một Topic vào kho cá nhân (lịch sử)
-    void saveWord(const Word& w, const Topic& t) {
-        if (!isLoggedIn) {
-            cout << "⚠️ Bạn cần đăng nhập trước.\n";
-            return;
-        }
+    void saveWord(const Word& w, const string& topicName) {
+        if (!isLoggedIn) return cout << "Đăng nhập trước!\n", void();
+        if (find_if(savedWords.begin(), savedWords.end(), [&](const auto& sw){ return sw.engLish == w.engLish; }) != savedWords.end())
+            return cout << "Từ đã lưu!\n", void();
         savedWords.push_back(w);
-        cout << "Đã lưu từ: " << w.engLish 
-             << " (thuộc chủ đề: " << t.getName() << ")\n";
+        cout << "Đã lưu: " << w.engLish << " (" << topicName << ")\n";
+    }
+
+    void deleteSavedWord(const string& eng) {
+        if (!isLoggedIn) return cout << "Cần đăng nhập!\n", void();
+        auto it = remove_if(savedWords.begin(), savedWords.end(), [&](const auto& w){ return w.engLish == eng; });
+        if (it != savedWords.end()) { savedWords.erase(it, savedWords.end()); cout << "Đã xóa!\n"; }
+        else cout << "Không tìm thấy!\n";
     }
 
     void showSavedWords() const {
-        if (!isLoggedIn) {
-            cout << "⚠️ Bạn cần đăng nhập để xem từ vựng.\n";
-            return;
-        }
-        cout << "===== Từ vựng đã lưu của " << username << " =====\n";
-        for (auto& w : savedWords) {
+        if (!isLoggedIn) return cout << "Cần đăng nhập!\n", void();
+        cout << "===== Từ của " << username << " =====\n";
+        if (savedWords.empty()) return cout << "(Trống)\n", void();
+        for (const auto& w : savedWords)
             cout << w.engLish << " - " << w.vietNam
-                 << " | Example: " << w.example
-                 << " | Đã ôn: " << w.reviewCount << " lần\n";
-        }
+                 << " | IPA: " << getIPAString(w.ipa)
+                 << " | EXP: " << w.exp << " | " << (w.isNew ? "MỚI" : "CŨ") << "\n";
     }
 
+    bool isLogin() const { return isLoggedIn; }
+    vector<Word>& getSavedWords() { return savedWords; }
     const vector<Word>& getSavedWords() const { return savedWords; }
-    bool getLoginStatus() const { return isLoggedIn; }
-    string getUsername() const { return username; }
 };
 
 // ===============================
-// Review: kế thừa Account, quản lý ôn tập
+// Class Review
 // ===============================
 class Review : public Account {
-private:
-    stack<Word> newWords;   // quản lý từ mới (LIFO)
-    queue<Word> oldWords;   // quản lý từ cũ (FIFO)
-    mt19937 rng;
+    mt19937 rng{ static_cast<unsigned>(time(nullptr)) };
+    vector<size_t> newIdx, oldIdx, allIdx; // Dùng chỉ số thay vì con trỏ
 
-    // Tạo 4 đáp án từ pool (1 đúng + 3 sai)
-    vector<string> makeOptions(const Word& q, const vector<Word>& pool, bool askEnglish) {
-        vector<string> opts;
-        if (askEnglish) {
-            opts.push_back(q.vietNam);
-            for (auto& w : pool) {
-                if (w.engLish != q.engLish && opts.size() < 4) opts.push_back(w.vietNam);
-            }
-        } else {
-            opts.push_back(q.engLish);
-            for (auto& w : pool) {
-                if (w.vietNam != q.vietNam && opts.size() < 4) opts.push_back(w.engLish);
-            }
-        }
+    vector<string> generateOptions(const Word* c, int t) {
+        vector<string> opts = { t == 0 ? c->engLish : c->vietNam };
+        vector<const Word*> pool;
+        for (size_t i = 0; i < allIdx.size(); ++i)
+            if (&getSavedWords()[allIdx[i]] != c) pool.push_back(&getSavedWords()[allIdx[i]]);
+        shuffle(pool.begin(), pool.end(), rng);
+        for (int i = 0; i < 3 && i < pool.size(); ++i)
+            opts.push_back(t == 0 ? pool[i]->engLish : pool[i]->vietNam);
         shuffle(opts.begin(), opts.end(), rng);
         return opts;
     }
 
-    // Đặt câu hỏi trắc nghiệm trên 10 từ trong pool
-    void askQuizOnPool(vector<Word>& pool) {
-        if (pool.empty()) {
-            cout << "⚠️ Không có từ nào để ôn.\n";
-            return;
+    string maskExample(const string& ex, const string& w) {
+        string s = ex; size_t p = 0;
+        while ((p = s.find(w, p)) != string::npos)
+            s.replace(p, w.length(), string(w.length(), '.')), p += w.length();
+        return s;
+    }
+
+    void updateAllWords() {
+        newIdx.clear(); oldIdx.clear(); allIdx.clear();
+        for (size_t i = 0; i < getSavedWords().size(); ++i) {
+            allIdx.push_back(i);
+            if (getSavedWords()[i].isNew) newIdx.push_back(i);
+            else oldIdx.push_back(i);
         }
-        if (pool.size() > 10) pool.resize(10);
-
-        int score = 0;
-        for (int i = 0; i < (int)pool.size(); i++) {
-            Word& q = pool[i];
-            bool askEnglish = uniform_int_distribution<int>(0,1)(rng) == 1;
-
-            cout << "\nCâu " << (i+1) << ": ";
-            if (askEnglish) cout << "Nghĩa của từ \"" << q.engLish << "\" là gì?\n";
-            else cout << "Từ tiếng Anh của \"" << q.vietNam << "\" là gì?\n";
-
-            auto options = makeOptions(q, pool, askEnglish);
-            for (int j = 0; j < (int)options.size(); j++) {
-                cout << j+1 << ". " << options[j] << "\n";
-            }
-
-            int ans;
-            do {
-                cout << "Chọn đáp án (1-4): ";
-                if (!(cin >> ans)) { cin.clear(); cin.ignore(numeric_limits<streamsize>::max(), '\n'); ans = -1; }
-            } while (ans < 1 || ans > 4);
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-            bool correct = (askEnglish && options[ans-1] == q.vietNam)
-                           || (!askEnglish && options[ans-1] == q.engLish);
-            if (correct) {
-                cout << "✅ Chính xác!\n";
-                score++;
-            } else {
-                cout << "❌ Sai. Đáp án đúng: " << (askEnglish ? q.vietNam : q.engLish) << "\n";
-            }
-        }
-
-        cout << "\n===== KẾT THÚC ÔN TẬP =====\n";
-        cout << "Điểm của bạn: " << score << "/" << pool.size() << "\n";
     }
 
 public:
-    using Account::Account;
+    Review(const string& topicName = "") : Account(topicName) {}
 
-    Review() : rng((unsigned)time(nullptr)) {}
-
-    // Đẩy từ đã lưu vào stack (mới) khi bắt đầu ôn (hoặc khi lưu mới)
-    void primeNewFromSaved() {
-        // Đưa tất cả từ đã lưu vào stack như từ mới (nếu stack trống)
-        if (newWords.empty()) {
-            for (auto it = getSavedWords().rbegin(); it != getSavedWords().rend(); ++it) {
-                newWords.push(*it);
-            }
-        }
+    void addNewWord(const Word& w, const string& topic) {
+        if (!isLogin()) return cout << "Đăng nhập trước!\n", void();
+        if (find_if(getSavedWords().begin(), getSavedWords().end(), [&](const auto& sw){ return sw.engLish == w.engLish; }) != getSavedWords().end())
+            return cout << "Từ đã lưu!\n", void();
+        getSavedWords().push_back(w);
+        getSavedWords().back().isNew = true;
+        getSavedWords().back().exp = 0;
+        cout << "Đã lưu: " << w.engLish << " (" << topic << ")\n";
     }
 
-    // Thêm từ mới (đồng thời thêm vào savedWords để giữ lịch sử)
-    void addNewWord(const Word& w) {
-        Topic tmp(getName());
-        saveWord(w, tmp); // lưu vào lịch sử
-        newWords.push(w); // thêm vào stack từ mới
-    }
+    void startReview(int mode) {
+        if (!isLogin()) return cout << "Đăng nhập trước!\n", void();
+        updateAllWords();
 
-    // Ôn tập ngẫu nhiên: lấy tối đa 10 từ từ toàn bộ savedWords
-    void reviewRandom() {
-        if (!getLoginStatus()) {
-            cout << "⚠️ Bạn cần đăng nhập để ôn tập.\n";
-            return;
-        }
-        auto words = getSavedWords();
-        if (words.empty()) {
-            cout << "⚠️ Bạn chưa lưu từ nào để ôn.\n";
-            return;
-        }
-        shuffle(words.begin(), words.end(), rng);
-        if (words.size() > 10) words.resize(10);
-        cout << "\n===== ÔN TẬP NGẪU NHIÊN =====\n";
-        askQuizOnPool(words);
-    }
+        vector<size_t> selected;
+        if (mode == 0 && !newIdx.empty()) {
+            // Lấy 10 từ mới gần đây nhất
+            int n = min(10, (int)newIdx.size());
+            for (int i = 0; i < n; ++i)
+                selected.push_back(newIdx[newIdx.size() - 1 - i]);
+        } else if (mode == 1 && !oldIdx.empty()) {
+            // Ngẫu nhiên 10 từ cũ
+            vector<size_t> pool = oldIdx;
+            shuffle(pool.begin(), pool.end(), rng);
+            int n = min(10, (int)pool.size());
+            selected.assign(pool.begin(), pool.begin() + n);
+        } else if (!allIdx.empty()) {
+            // Ngẫu nhiên từ tất cả
+            vector<size_t> pool = allIdx;
+            shuffle(pool.begin(), pool.end(), rng);
+            int n = min(10, (int)pool.size());
+            selected.assign(pool.begin(), pool.begin() + n);
+        } else return cout << "Chưa có từ!\n", void();
 
-    // Ôn từ mới: lấy 10 từ từ top của stack; nếu không đủ, fallback random
-    void reviewNew() {
-        if (!getLoginStatus()) {
-            cout << "⚠️ Bạn cần đăng nhập để ôn tập.\n";
-            return;
-        }
-        primeNewFromSaved(); // đảm bảo có dữ liệu mới
+        cout << "\n=== " << (mode == 0 ? "ÔN TỪ MỚI" : mode == 1 ? "ÔN TỪ CŨ" : "ÔN NGẪU NHIÊN") << " ===\n";
+        int correct = 0;
 
-        if (newWords.size() < 10) {
-            cout << "⚠️ Từ mới không đủ 10. Chuyển sang ôn ngẫu nhiên.\n";
-            reviewRandom();
-            return;
-        }
+        for (size_t i = 0; i < selected.size(); ++i) {
+            size_t idx = selected[i];
+            Word* w = &getSavedWords()[idx];
+            int type = rng() % 3;
+            string q = type == 0 ? w->vietNam : type == 1 ? w->engLish : maskExample(w->example, w->engLish);
+            auto opts = generateOptions(w, type);
+            int ansIdx = -1;
+            for (int j = 0; j < 4; ++j)
+                if (opts[j] == (type == 0 ? w->engLish : w->vietNam)) ansIdx = j;
 
-        // Lấy 10 từ từ stack (top-first)
-        vector<Word> pool;
-        stack<Word> temp = newWords; // copy stack để pop mà không ảnh hưởng
-        for (int i = 0; i < 10 && !temp.empty(); i++) {
-            pool.push_back(temp.top());
-            temp.pop();
-        }
-        cout << "\n===== ÔN TẬP TỪ MỚI (Stack) =====\n";
-        askQuizOnPool(pool);
+            cout << "\nCâu " << i+1 << ": " << q << "\n";
+            for (int j = 0; j < 4; ++j) cout << " " << (char)('A'+j) << ". " << opts[j] << "\n";
+            char ch; cout << "Chọn: "; cin >> ch; cin.ignore();
+            int choice = toupper(ch) - 'A';
 
-        // Giả lập tăng reviewCount, tốt nghiệp nếu đủ 10
-        // Ta thực hiện bằng cách pop/push lại stack với cập nhật reviewCount
-        stack<Word> rebuilt;
-        while (!newWords.empty()) {
-            Word w = newWords.top(); newWords.pop();
-            // nếu w nằm trong pool, tăng reviewCount
-            for (auto& q : pool) {
-                if (q.engLish == w.engLish && q.vietNam == w.vietNam) {
-                    w.reviewCount++;
-                    break;
-                }
-            }
-            // nếu đủ 10 lần, chuyển sang queue cũ
-            if (w.reviewCount >= 10) {
-                cout << "🎓 Từ \"" << w.engLish << "\" đã chuyển sang từ cũ.\n";
-                oldWords.push(w);
-            } else {
-                rebuilt.push(w);
+            if (choice == ansIdx) { cout << "Đúng! +1 exp\n"; w->exp++; correct++; }
+            else { cout << "Sai! -2 exp (Đáp án: " << (char)('A'+ansIdx) << ")\n"; w->exp = max(0, w->exp - 2); }
+
+            if (w->exp >= 10 && w->isNew) {
+                w->isNew = false;
+                cout << "→ '" << w->engLish << "' đã thành TỪ CŨ!\n";
             }
         }
-        // khôi phục thứ tự stack (đảo lại để giữ gần giống ban đầu)
-        stack<Word> restore;
-        while (!rebuilt.empty()) { restore.push(rebuilt.top()); rebuilt.pop(); }
-        newWords = restore;
-    }
-
-    // Ôn từ cũ: lấy 10 từ từ front của queue; nếu không đủ, fallback random
-    void reviewOld() {
-        if (!getLoginStatus()) {
-            cout << "⚠️ Bạn cần đăng nhập để ôn tập.\n";
-            return;
-        }
-        if (oldWords.size() < 10) {
-            cout << "⚠️ Từ cũ không đủ 10. Chuyển sang ôn ngẫu nhiên.\n";
-            reviewRandom();
-            return;
-        }
-
-        // Lấy đúng 10 từ từ queue theo FIFO
-        vector<Word> pool;
-        queue<Word> temp = oldWords;
-        for (int i = 0; i < 10 && !temp.empty(); i++) {
-            pool.push_back(temp.front());
-            temp.pop();
-        }
-        cout << "\n===== ÔN TẬP TỪ CŨ (Queue) =====\n";
-        askQuizOnPool(pool);
-
-        // Sau mỗi lần ôn cũ: tăng reviewCount và xoay vòng
-        int processed = 0;
-        int total = oldWords.size();
-        for (int i = 0; i < total; i++) {
-            Word w = oldWords.front(); oldWords.pop();
-            // nếu w nằm trong pool, tăng reviewCount
-            for (auto& q : pool) {
-                if (q.engLish == w.engLish && q.vietNam == w.vietNam) {
-                    w.reviewCount++;
-                    break;
-                }
-            }
-            oldWords.push(w); // xoay vòng
-            processed++;
-        }
+        cout << "\nKết thúc! Đúng: " << correct << "/" << selected.size() << "\n";
+        saveWordsToFile();
     }
 };
 
 // ===============================
-// Demo main
+// MAIN
 // ===============================
 int main() {
-    // Tạo chủ đề Fruits
-    Topic fruits("Fruits");
-    fruits.addWord({"apple", "quả táo", IPA_ae, "I eat an apple every day"});
-    fruits.addWord({"banana", "quả chuối", IPA_ae, "Bananas are yellow"});
-    fruits.addWord({"orange", "quả cam", IPA_ae, "Orange juice is tasty"});
-    fruits.addWord({"grape", "quả nho", IPA_ae, "Grapes are purple"});
-    fruits.addWord({"mango", "quả xoài", IPA_ae, "Mango is sweet"});
-    fruits.addWord({"lemon", "quả chanh", IPA_ae, "Lemon is sour"});
-    fruits.addWord({"pear", "quả lê", IPA_ae, "Pears are juicy"});
-    fruits.addWord({"peach", "quả đào", IPA_ae, "Peaches are soft"});
-    fruits.addWord({"plum", "quả mận", IPA_ae, "Plums are small"});
-    fruits.addWord({"melon", "dưa lưới", IPA_ae, "Melon is refreshing"});
-    fruits.addWord({"papaya", "đu đủ", IPA_ae, "Papaya has many seeds"});
+    Review app("Fruits");
+    app.addWord(Word("apple", "quả táo", IPA_ae, "I eat an apple every day."));
+    app.addWord(Word("banana", "quả chuối", IPA_ae, "Bananas are yellow."));
+    app.addWord(Word("grape", "quả nho", IPA_ae, "Grapes are sweet."));
 
-    // Tài khoản với Review
-    Review acc;
-    if (acc.signUp()) {
-        if (acc.login()) {
-            acc.setName("Fruits");
-
-            // Lưu một số từ vào tài khoản (kho savedWords)
-            for (const auto& w : fruits.getWords()) {
-                acc.saveWord(w, fruits);
+    int choice;
+    while (true) {
+        cout << "\n===== MENU =====\n"
+             << "1. Đăng ký\n2. Đăng nhập\n3. Xem chủ đề\n4. Lưu từ\n"
+             << "5. Xem từ lưu\n6. Xóa từ\n7. Ôn tập\n8. Đăng xuất\n0. Thoát\n"
+             << "Chọn: ";
+        cin >> choice; cin.ignore();
+        switch (choice) {
+            case 1: app.signUp(); break;
+            case 2: app.login(); break;
+            case 3: app.showTopicWords(); break;
+            case 4: {
+                if (!app.isLogin()) { cout << "Đăng nhập trước!\n"; break; }
+                app.showTopicWords();
+                cout << "Số thứ tự: "; int i; cin >> i; cin.ignore();
+                if (i >= 0 && i < (int)app.getWords().size())
+                    app.addNewWord(app.getWords()[i], app.getName());
+                break;
             }
-
-            // Đồng thời đưa một số từ mới vào stack (từ đầu danh sách)
-            // Hoặc dùng acc.addNewWord(w) nếu muốn vừa lưu vừa thêm vào stack
-            for (int i = 0; i < 10 && i < (int)fruits.getWords().size(); i++) {
-                acc.addNewWord(fruits.getWords()[i]);
+            case 5: app.showSavedWords(); break;
+            case 6: {
+                if (!app.isLogin()) { cout << "Đăng nhập trước!\n"; break; }
+                cout << "Từ xóa: "; string w; getline(cin, w);
+                app.deleteSavedWord(w); break;
             }
-
-            cout << "\n===== MENU ÔN TẬP =====\n";
-            cout << "1. Ôn ngẫu nhiên\n";
-            cout << "2. Ôn từ mới (Stack)\n";
-            cout << "3. Ôn từ cũ (Queue)\n";
-            cout << "Chọn: ";
-            int mode; 
-            if (!(cin >> mode)) { cin.clear(); cin.ignore(numeric_limits<streamsize>::max(), '\n'); mode = 1; }
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-            if (mode == 1) acc.reviewRandom();
-            else if (mode == 2) acc.reviewNew();
-            else if (mode == 3) acc.reviewOld();
-            else {
-                cout << "Lựa chọn không hợp lệ. Mặc định ôn ngẫu nhiên.\n";
-                acc.reviewRandom();
+            case 7: {
+                if (!app.isLogin()) { cout << "Đăng nhập trước!\n"; break; }
+                cout << "1. MỚI 2. CŨ 3. NGẪU NHIÊN\nChọn: "; int m; cin >> m; cin.ignore();
+                if (m >= 1 && m <= 3) app.startReview(m-1);
+                break;
             }
-
-            cout << "\nHiển thị từ đã lưu (tham khảo):\n";
-            acc.showSavedWords();
-
-            acc.logout();
+            case 8: app.logout(); break;
+            case 0: app.logout(); cout << "Tạm biệt!\n"; return 0;
+            default: cout << "Sai lựa chọn!\n";
         }
     }
-
-    return 0;
 }
