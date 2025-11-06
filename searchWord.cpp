@@ -258,7 +258,7 @@ void speakVoice(const string& text) {
     string safeText = text;
     replace(safeText.begin(), safeText.end(), '\'', ' ');
     string command =
-        "powershell -Command \""
+        "powershell -Command \"" 
         "Add-Type -AssemblyName System.Speech; "
         "$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
         "$speak.SelectVoice('Microsoft Zira Desktop'); "
@@ -266,6 +266,36 @@ void speakVoice(const string& text) {
     system(command.c_str());
 }
 #endif
+
+// === NEW: History feature ===
+void saveHistory(const string& word) {
+    ofstream f("history.txt", ios::app);
+    if (f.is_open()) {
+        f << word << endl;
+        f.close();
+    }
+}
+
+vector<string> loadHistory(int limit = 5) {
+    vector<string> history;
+    ifstream f("history.txt");
+    if (!f.is_open()) return history;
+
+    string line;
+    vector<string> all;
+    while (getline(f, line)) {
+        line = trim(line);
+        if (!line.empty()) all.push_back(line);
+    }
+    f.close();
+
+    int start = max(0, (int)all.size() - limit);
+    for (int i = start; i < (int)all.size(); ++i)
+        history.push_back(all[i]);
+
+    return history;
+}
+// === END NEW ===
 
 // ===============================
 // MAIN
@@ -281,6 +311,16 @@ int main() {
         cout << "Vui lòng đặt file data.txt cùng thư mục với chương trình.\n";
         return 1;
     }
+
+    // === NEW: Hiển thị lịch sử ===
+    auto history = loadHistory();
+    if (!history.empty()) {
+        cout << "\n===== Lịch sử tra gần đây =====\n";
+        for (int i = (int)history.size() - 1; i >= 0; --i)
+            cout << "- " << history[i] << endl;
+        cout << "================================\n";
+    }
+    // === END NEW ===
 
     int choice = -1;
     while (true) {
@@ -310,12 +350,15 @@ int main() {
 
                 Word* result = dict.searchEnglishToVietnamese(input);
                 if (result != NULL) {
+                    // === NEW: lưu lịch sử ===
+                    saveHistory(result->english);
+                    // === END NEW ===
+
                     cout << "\nKết quả:\n";
                     cout << "English   : " << result->english << "\n";
                     cout << "Vietnamese: " << result->vietnamese << "\n";
                     cout << "IPA       : " << result->ipaText << "\n";
                     cout << "Example   : " << result->example << "\n";
-
 #ifdef _WIN32
                     int voiceChoice;
                     string voiceInput;
@@ -465,5 +508,3 @@ int main() {
 
     return 0;
 }
-
-
