@@ -106,16 +106,16 @@ D. may
 ANSWER:1
 
 [GAPFILL]
-1. I _____ to the market yesterday. = went (go)
-2. She _____ English very well. = speaks (speak)
-3. They _____ lunch at 12 o'clock. = have (have)
-4. He _____ playing football now. = is (be)
-5. We _____ never been to Japan. = have (have)
-6. She _____ TV last night. = watched (watch)
-7. The sun _____ in the east. = rises (rise)
-8. They _____ a new car next month. = will buy (buy)
-9. He _____ coffee every morning. = drinks (drink)
-10. I _____ waiting for you since 7 o’clock. = have been (be)
+1. I _____  (go) to the market yesterday. = went
+2. She _____  (speak) English very well. = speaks
+3. They _____  (have)lunch at 12 o'clock. = have
+4. He _____ (be) playing football now. = is
+5. We _____ (have) never been to Japan. = have
+6. She _____ (watch) TV last night. = watched
+7. The sun _____ (rise) in the east. = rises
+8. They _____ (buy) a new car next month. = will buy
+9. He _____ (drink) coffee every morning. = drinks
+10. I _____ (be) waiting for you since 7 o’clock. = have been
 
 [REARRANGE]
 1. go / every day / school / to / I = I go to school every day.
@@ -233,16 +233,16 @@ D. would
 ANSWER:1
 
 [GAPFILL]
-1. She _____ (study) English every day. = studies (study)
-2. They _____ (not play) football now. = aren't playing (not play)
-3. I _____ (see) him yesterday. = saw (see)
-4. He _____ (work) here for two years. = has worked (work)
-5. We _____ (not go) to the party last night. = didn't go (not go)
-6. It _____ (rain) at the moment. = is raining (rain)
-7. My father _____ (read) a book. = is reading (read)
-8. They _____ (be) friends for ten years. = have been (be)
-9. She _____ (cook) dinner now. = is cooking (cook)
-10. We _____ (finish) our work already. = have finished (finish)
+1. She _____ (study) English every day. = studies
+2. They _____ (not play) football now. = aren't playing
+3. I _____ (see) him yesterday. = saw
+4. He _____ (work) here for two years. = has worked
+5. We _____ (not go) to the party last night. = didn't go
+6. It _____ (rain) at the moment. = is raining
+7. My father _____ (read) a book. = is reading
+8. They _____ (be) friends for ten years. = have been
+9. She _____ (cook) dinner now. = is cooking
+10. We _____ (finish) our work already. = have finished
 
 [REARRANGE]
 1. yesterday / I / him / saw. = I saw him yesterday.
@@ -360,16 +360,16 @@ D. has / fly
 ANSWER:1
 
 [GAPFILL]
-1. They _____ (go) to school every day. = go (go)
-2. She _____ (watch) TV now. = is watching (watch)
-3. I _____ (not see) him yet. = haven't seen (see)
-4. We _____ (eat) lunch at noon. = eat (eat)
-5. He _____ (work) in this company since 2015. = has worked (work)
-6. My friends _____ (play) football when I called. = were playing (play)
-7. She _____ (write) a letter now. = is writing (write)
-8. I _____ (meet) him yesterday. = met (meet)
-9. They _____ (be) to Ha Long Bay twice. = have been (be)
-10. He _____ (sleep) when the phone rang. = was sleeping (sleep)
+1. They _____ (go) to school every day. = go
+2. She _____ (watch) TV now. = is watching
+3. I _____ (not see) him yet. = haven't seen
+4. We _____ (eat) lunch at noon. = eat
+5. He _____ (work) in this company since 2015. = has worked
+6. My friends _____ (play) football when I called. = were playing
+7. She _____ (write) a letter now. = is writing
+8. I _____ (meet) him yesterday. = met
+9. They _____ (be) to Ha Long Bay twice. = have been 
+10. He _____ (sleep) when the phone rang. = was sleeping
 
 [REARRANGE]
 1. school / go / every / They / day / to. = They go to school every day.
