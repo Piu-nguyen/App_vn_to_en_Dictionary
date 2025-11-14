@@ -312,22 +312,13 @@ void SavedWords::autoLearn(const string& eng) {
             it->exp += 10;
             cout << "Đã học: " << eng << " (+10 EXP)\n";
         } else {
-            it->exp += 5;
-            cout << "Ôn lại: " << eng << " (+5 EXP)\n";
+            it->exp += 2;  // Ôn lại nhẹ: +2 EXP
+            cout << "Ôn lại: " << eng << " (+2 EXP)\n";
         }
         it->isNew = false;
         it->lastReview = time(nullptr);
-    } else {
-        Word temp(eng, "", "", "", "");
-        temp.learned = true;
-        temp.exp = 10;
-        temp.isNew = false;
-        temp.lastReview = time(nullptr);
-        words.push_back(temp);
-        Dictionary::add(temp);
-        cout << "Tự động ghi nhận: " << eng << " là đã học (+10 EXP)\n";
     }
-    saveToFile();
+    
 }
 
 bool SavedWords::remove(const string& eng) {
@@ -866,14 +857,14 @@ public:
             }
 
             if (account.isLogin()) {
-                account.getSavedWords()->autoLearn(w->english);
+                account.getSavedWords()->autoLearn(w->english);  // Chỉ ghi nhận
                 refreshLearnedStatus();
             }
 
             if (account.isLogin() && !account.isWordSaved(w->english)) {
-                string yn = safeInput("\nLưu từ này? (y/n): ");
+                string yn = safeInput("\nLưu từ này vào danh sách cá nhân? (y/n): ");
                 if (!trim(yn).empty() && tolower(trim(yn)[0]) == 'y') {
-                    account.saveWord(*w);
+                    account.saveWord(*w);  // GỌI addOrUpdate → LƯU CHÍNH THỨC
                     cout << "Đã lưu chính thức!\n";
                 }
             }
@@ -890,28 +881,96 @@ public:
     }
 
     void showProgress() {
-        refreshLearnedStatus();
-        int total = allWords.size();
-        int learned = 0, mastered = 0;
-        for (size_t i = 0; i < allWords.size(); ++i) if (allWords[i].learned) learned++;
-        if (account.isLogin()) {
-            for (size_t i = 0; i < account.getSavedWords()->getWords().size(); ++i)
-                if (account.getSavedWords()->getWords()[i].isMastered) mastered++;
-        }
-        ifstream mf("mastered_words.txt");
-        string line; while (getline(mf, line)) if (!trim(line).empty()) mastered++;
+    refreshLearnedStatus();
 
-        cout << "\nTIẾN ĐỘ HỌC TẬP\n";
-        cout << "Đã học: " << learned << "/" << total << " từ\n";
-        cout << "Thành thạo: " << mastered << " từ\n";
-        if (account.isLogin()) {
-            int totalEXP = 0;
-            for (size_t i = 0; i < account.getSavedWords()->getWords().size(); ++i)
-                totalEXP += account.getSavedWords()->getWords()[i].exp;
-            cout << "Tổng EXP: " << totalEXP << " điểm\n";
+    // --- Khai báo biến ---
+    int totalWords = allWords.size();
+    int learnedTotal = 0, masteredTotal = 0, needReviewCount = 0;
+    int learnedTodayCount = 0, reviewedTodayCount = 0, totalEXP = 0;
+
+    time_t now = time(nullptr);
+    struct tm* todayTm = localtime(&now);
+    int todayKey = (todayTm->tm_year + 1900) * 1000 + todayTm->tm_yday;
+
+    set<int> learnedDays;  // Lưu ngày đã học
+
+    // --- Đếm từ đã lưu của user ---
+    if (account.isLogin() && account.getSavedWords()) {
+        const auto& saved = account.getSavedWords()->getWords();
+        for (const auto& w : saved) {
+            if (!w.learned) continue;
+
+            learnedTotal++;
+            totalEXP += w.exp;
+            if (w.isMastered) masteredTotal++;
+
+            if (w.lastReview > 0) {
+                struct tm* wt = localtime(&w.lastReview);
+                int dayKey = (wt->tm_year + 1900) * 1000 + wt->tm_yday;
+                learnedDays.insert(dayKey);
+
+                // Hôm nay?
+                if (dayKey == todayKey) {
+                    if (w.isNew) learnedTodayCount++;
+                    else reviewedTodayCount++;
+                }
+            }
+
+            // Cần ôn?
+            if (needsReview(w)) needReviewCount++;
         }
     }
 
+    // --- Đếm từ thành thạo ngoài file saved ---
+    ifstream mf("mastered_words.txt");
+    string line;
+    while (getline(mf, line)) {
+        if (trim(line).empty()) continue;
+        string eng;
+        stringstream ss(line);
+        getline(ss, eng, '|');
+        if (!eng.empty() && 
+            (!account.isLogin() || !account.getSavedWords()->contains(eng)))
+            masteredTotal++;
+    }
+    mf.close();
+
+    // --- Tính Streak ---
+    int streak = 0;
+    int checkDay = todayKey;
+    while (learnedDays.count(checkDay)) {
+        streak++;
+        checkDay--;
+    }
+
+    // --- HIỂN THỊ ---
+    cout << "\n";
+    cout << "═══════════════════════════════════════\n";
+    cout << "        THỐNG KÊ HỌC TẬP CHI TIẾT        \n";
+    cout << "═══════════════════════════════════════\n";
+
+    cout << "HÔM NAY (" << put_time(todayTm, "%d/%m/%Y") << ")\n";
+    cout << " • Học mới: " << learnedTodayCount << " từ\n";
+    cout << " • Ôn lại: " << reviewedTodayCount << " từ\n";
+    cout << " • Tổng hoạt động: " << (learnedTodayCount + reviewedTodayCount) << " lần\n";
+
+    cout << "\nTIẾN ĐỘ TỔNG\n";
+    cout << " • Đã học: " << learnedTotal << " / " << totalWords << " từ";
+    if (totalWords > 0)
+        cout << " (" << fixed << setprecision(1) << (learnedTotal * 100.0 / totalWords) << "%)";
+    cout << "\n • Thành thạo: " << masteredTotal << " từ\n";
+    cout << " • Cần ôn lại: " << needReviewCount << " từ (quá 7 ngày)\n";
+    cout << " • Tổng EXP: " << totalEXP << " điểm\n";
+
+    cout << "\nSTREAK (liên tục học)\n";
+    if (streak > 0)
+        cout << " • Bạn đang giữ: " << streak << " ngày liên tục!\n";
+    else
+        cout << " • Chưa có streak. Học hôm nay để bắt đầu!\n";
+
+    cout << "═══════════════════════════════════════\n";
+    safeInput("\nNhấn Enter để tiếp tục...");
+}
     void menu() {
         enableUTF8();
         buildData();
@@ -942,13 +1001,13 @@ public:
             cout << "5. Đăng nhập / Đăng ký\n";
             cout << "6. Đăng xuất\n";
             cout << "7. Xóa từ đã lưu\n";
-            if (account.isLogin()) {
+                        if (account.isLogin()) {
                 cout << "8. Ôn 12 thì tiếng Anh\n";
+                cout << "9. Xem từ đã lưu & quản lý\n";  
             }
             cout << "0. Thoát\n";
             cout << "════════════════════════════════════\n";
-
-            int maxChoice = account.isLogin() ? 8 : 7;
+            int maxChoice = account.isLogin() ? 9 : 7; 
             choice = getChoice(maxChoice, "Chọn (0-" + to_string(maxChoice) + "): ");
             if (choice == 0) break;
 
@@ -972,6 +1031,14 @@ public:
                     break;
                 }
                 case 8: if (account.isLogin()) grammar.learnGrammars(); else cout << "Đăng nhập trước!\n"; break;
+                case 9:
+                    if (!account.isLogin()) {
+                        cout << "Đăng nhập trước!\n";
+                        break;
+                    }
+                    account.showSavedWords();
+                    safeInput("\nNhấn Enter để tiếp tục...");
+                    break;
             }
         } while (true);
 
