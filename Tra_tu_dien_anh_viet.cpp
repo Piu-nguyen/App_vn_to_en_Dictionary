@@ -25,6 +25,16 @@ using namespace std;
 namespace fs = std::filesystem;
 
 // ==============================
+// ENUM CLASS: Trạng thái học tập
+// ==============================
+enum class LearnStage : int {
+    NotLearned = 0,  // Chưa học
+    Basic      = 1,  // Level 1–5
+    Advanced   = 2,  // Level 6–9
+    Mastered   = 3   // Level 10
+};
+
+// ==============================
 // UTF-8 & Safe Input
 // ==============================
 void enableUTF8() {
@@ -158,7 +168,7 @@ vector<string> loadHistory(int limit = 5) {
 }
 
 // ==============================
-// Word
+// Word (với enum)
 // ==============================
 struct Word {
     string english, vietnamese, ipaText, example, topic;
@@ -178,11 +188,21 @@ struct Word {
         return static_cast<int>(100 * pow(1.2, level - 4));
     }
 
+    LearnStage getStage() const {
+        if (level == 0) return LearnStage::NotLearned;
+        if (level <= 5) return LearnStage::Basic;
+        if (level < 10) return LearnStage::Advanced;
+        return LearnStage::Mastered;
+    }
+
     string stageName() const {
-        if (level == 0) return "Chưa học";
-        if (level <= 5) return "Cơ bản";
-        if (level < 10) return "Nâng cao";
-        return "Thông thạo";
+        switch (getStage()) {
+            case LearnStage::NotLearned: return "Chưa học";
+            case LearnStage::Basic:      return "Cơ bản";
+            case LearnStage::Advanced:   return "Nâng cao";
+            case LearnStage::Mastered:   return "Thông thạo";
+        }
+        return "";
     }
 };
 
@@ -226,7 +246,7 @@ public:
 };
 
 // ==============================
-// SavedWords
+// SavedWords (dùng enum)
 // ==============================
 class SavedWords : public Dictionary {
 private:
@@ -307,7 +327,7 @@ public:
             Dictionary::add(newWord);
             cout << "Đã lưu: " << word.english << " (Level 1 - MỚI +10 EXP) [" << word.topic << "]\n";
         } else {
-            if (it->isMastered) {
+            if (it->getStage() == LearnStage::Mastered) {
                 cout << "Từ \"" << word.english << "\" đã thông thạo!\n";
                 return false;
             }
@@ -340,7 +360,7 @@ public:
         auto it = find_if(words.begin(), words.end(),
                           [&](const Word& w) { return w.english == eng; });
         if (it != words.end()) {
-            if (it->isMastered) return;
+            if (it->getStage() == LearnStage::Mastered) return;
             if (!it->learned) {
                 it->learned = true;
                 it->exp += 10;
@@ -383,7 +403,8 @@ public:
                             [&](const Word& w) { return w.english == eng; });
         if (it == words.end()) return false;
         words.erase(it, words.end());
-        // Xóa: loadFromFile() ở đây là thừa → gây lỗi
+        clear(rootEng); clear(rootVie); rootEng = rootVie = nullptr;
+        for (const auto& w : words) Dictionary::add(w);
         saveToFile();
         return true;
     }
@@ -392,11 +413,14 @@ public:
         cout << "\n===== TỪ CỦA " << username << " =====\n";
         if (words.empty()) { cout << "(Trống)\n"; return; }
 
-        vector<Word> basic, advanced, mastered;
+        vector<Word> notLearned, basic, advanced, mastered;
         for (const auto& w : words) {
-            if (w.isMastered) mastered.push_back(w);
-            else if (w.level <= 5) basic.push_back(w);
-            else advanced.push_back(w);
+            switch (w.getStage()) {
+                case LearnStage::NotLearned: notLearned.push_back(w); break;
+                case LearnStage::Basic:      basic.push_back(w); break;
+                case LearnStage::Advanced:   advanced.push_back(w); break;
+                case LearnStage::Mastered:   mastered.push_back(w); break;
+            }
         }
 
         auto printGroup = [](const string& title, const vector<Word>& list) {
@@ -411,6 +435,7 @@ public:
             }
         };
 
+        printGroup("CHƯA HỌC", notLearned);
         printGroup("CƠ BẢN (L1-5)", basic);
         printGroup("NÂNG CAO (L6-9)", advanced);
         printGroup("THÔNG THÁO (L10)", mastered);
@@ -425,10 +450,9 @@ public:
 
     int countMasteredInTopic(const string& topic) const {
         return count_if(words.begin(), words.end(),
-            [&](const Word& w) { return w.isMastered && w.topic == topic; });
+            [&](const Word& w) { return w.getStage() == LearnStage::Mastered && w.topic == topic; });
     }
 };
-
 // ==============================
 // Account
 // ==============================
