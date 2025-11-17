@@ -28,10 +28,10 @@ namespace fs = std::filesystem;
 // ENUM CLASS: Trạng thái học tập
 // ==============================
 enum class LearnStage : int {
-    NotLearned = 0,  // Chưa học
-    Basic      = 1,  // Level 1–5
-    Advanced   = 2,  // Level 6–9
-    Mastered   = 3   // Level 10
+    NotLearned = 0, // Chưa học
+    Basic = 1, // Level 1–5
+    Advanced = 2, // Level 6–9
+    Mastered = 3 // Level 10
 };
 
 // ==============================
@@ -44,7 +44,6 @@ void enableUTF8() {
     system("chcp 65001 > nul");
 #endif
 }
-
 string safeInput(const string& prompt = "") {
     string line;
     cout << prompt;
@@ -66,11 +65,9 @@ string trim(const string& s) {
     size_t end = s.find_last_not_of(" \t\r\n");
     return (start == string::npos) ? "" : s.substr(start, end - start + 1);
 }
-
 bool isNumber(const string& s) {
     return !s.empty() && all_of(s.begin(), s.end(), ::isdigit);
 }
-
 string normalize(const string& s) {
     static const map<char, char> m = {
         // vietnamese lowercase
@@ -96,7 +93,9 @@ string normalize(const string& s) {
         {char(0xC8),'E'},{char(0xC9),'E'},{char(0x1EBA),'E'},{char(0x1EBC),'E'},{char(0x1EB8),'E'},
         {char(0xCA),'E'},{char(0x1EC0),'E'},{char(0x1EBE),'E'},{char(0x1EC2),'E'},{char(0x1EC4),'E'},{char(0x1EC6),'E'},
         {char(0xCC),'I'},{char(0xCD),'I'},{char(0x1EC8),'I'},{char(0x128),'I'},{char(0x1ECA),'I'},
-        {char(0xD2),'O'},{char(0xD3),'O'},{char(0x1ECE),'O'},{char(0xD5),'O'},{char(0x1ECC),'O'},
+        {char(0xD2),'O'},{char(0xD3),'O'},{char(0x1ECE),'O'},{char(
+
+0xD5),'O'},{char(0x1ECC),'O'},
         {char(0xD4),'O'},{char(0x1ED2),'O'},{char(0x1ED0),'O'},{char(0x1ED4),'O'},{char(0x1ED6),'O'},{char(0x1ED8),'O'},
         {char(0x1A0),'O'},{char(0x1EDC),'O'},{char(0x1EDA),'O'},{char(0x1EDE),'O'},{char(0x1EE0),'O'},{char(0x1EE2),'O'},
         {char(0xD9),'U'},{char(0xDA),'U'},{char(0x1EE6),'U'},{char(0x168),'U'},{char(0x1EE4),'U'},
@@ -113,7 +112,7 @@ string normalize(const string& s) {
 }
 
 // ==============================
-// Phát âm (Windows)
+// Phát âm (Windows + Linux/macOS fallback)
 // ==============================
 #ifdef _WIN32
 void speak(const string& text) {
@@ -128,7 +127,6 @@ void speak(const string& text) {
                  "$synth.Speak('" + escaped + "');\"";
     system(cmd.c_str());
 }
-
 void speakRepeat(const string& text) {
     cout << "\nĐang phát lại liên tục... (Nhấn Enter để dừng)\n";
     atomic<bool> stop{false};
@@ -142,6 +140,15 @@ void speakRepeat(const string& text) {
     stop = true;
     t.join();
 }
+#else
+void speak(const string& text) {
+    string cmd = "espeak \"" + text + "\" 2>/dev/null || say \"" + text + "\"";
+    system(cmd.c_str());
+}
+void speakRepeat(const string& text) {
+    cout << "\nTính năng lặp lại chỉ hỗ trợ trên Windows.\n";
+    safeInput("Nhấn Enter để tiếp tục...");
+}
 #endif
 
 // ==============================
@@ -151,8 +158,7 @@ void saveHistory(const string& word) {
     ofstream f("history.txt", ios::app);
     if (f.is_open()) { f << word << "\n"; f.close(); }
 }
-
-vector<string> loadHistory(int limit = 5) {
+vector<string> loadHistory(int limit = 10) {
     vector<string> all, res;
     ifstream f("history.txt");
     if (!f.is_open()) return res;
@@ -177,30 +183,26 @@ struct Word {
     int level = 0;
     bool isNew = true;
     bool isMastered = false;
-
     Word() = default;
     Word(const string& e, const string& v, const string& ipaTxt, const string& ex, const string& t = "")
         : english(e), vietnamese(v), ipaText(ipaTxt), example(ex), topic(t) {}
-
     int expToNextLevel() const {
         if (level >= 10) return 0;
         if (level < 5) return 100;
         return static_cast<int>(100 * pow(1.2, level - 4));
     }
-
     LearnStage getStage() const {
         if (level == 0) return LearnStage::NotLearned;
         if (level <= 5) return LearnStage::Basic;
         if (level < 10) return LearnStage::Advanced;
         return LearnStage::Mastered;
     }
-
     string stageName() const {
         switch (getStage()) {
             case LearnStage::NotLearned: return "Chưa học";
-            case LearnStage::Basic:      return "Cơ bản";
-            case LearnStage::Advanced:   return "Nâng cao";
-            case LearnStage::Mastered:   return "Thông thạo";
+            case LearnStage::Basic: return "Cơ bản";
+            case LearnStage::Advanced: return "Nâng cao";
+            case LearnStage::Mastered: return "Thông thạo";
         }
         return "";
     }
@@ -210,7 +212,6 @@ struct Word {
 // BST Dictionary
 // ==============================
 struct Node { Word data; Node *left = nullptr, *right = nullptr; Node(const Word& w) : data(w) {} };
-
 class Dictionary {
 protected:
     Node *rootEng = nullptr, *rootVie = nullptr;
@@ -254,16 +255,14 @@ private:
     vector<Word> words;
     string saveFile;
     string masteredFile;
-
     void saveToFile() const {
         ofstream f(saveFile);
         if (!f) return;
         for (const auto& w : words)
             f << w.english << "|" << w.vietnamese << "|" << w.ipaText << "|" << w.example << "|"
-              << w.exp << "|" << (w.isNew ? "1" : "0") << "|" << w.topic << "|" 
+              << w.exp << "|" << (w.isNew ? "1" : "0") << "|" << w.topic << "|"
               << (w.learned ? "1" : "0") << "|" << w.level << "|" << (w.isMastered ? "1" : "0") << "\n";
     }
-
     void saveMastered() const {
         ofstream f(masteredFile);
         if (!f) return;
@@ -271,7 +270,6 @@ private:
             if (w.isMastered)
                 f << w.english << "|" << w.vietnamese << "|" << w.topic << "\n";
     }
-
     void loadFromFile() {
         words.clear();
         clear(rootEng); clear(rootVie); rootEng = rootVie = nullptr;
@@ -295,20 +293,16 @@ private:
             Dictionary::add(w);
         }
     }
-
 public:
-    SavedWords(const string& user) : username(user), 
+    SavedWords(const string& user) : username(user),
         saveFile(user + "_words.txt"), masteredFile(user + "_mastered.txt") {
         loadFromFile();
     }
-
     bool addOrUpdateInteractive(const Word& word, bool askSave = true) {
         auto it = find_if(words.begin(), words.end(),
                           [&](const Word& w) { return w.english == word.english; });
         bool isNewWord = (it == words.end());
-
         if (!askSave && !isNewWord) return false;
-
         if (isNewWord) {
             string yn = safeInput("Lưu từ \"" + word.english + "\" vào danh sách cá nhân? (y/n): ");
             if (trim(yn).empty() || tolower(trim(yn)[0]) != 'y') {
@@ -316,7 +310,6 @@ public:
                 return false;
             }
         }
-
         if (isNewWord) {
             Word newWord = word;
             newWord.exp = 10;
@@ -334,7 +327,6 @@ public:
             it->exp += 10;
             it->isNew = false;
             it->learned = true;
-
             int oldLevel = it->level;
             while (it->level < 10 && it->exp >= it->expToNextLevel()) {
                 it->exp -= it->expToNextLevel();
@@ -346,7 +338,7 @@ public:
                     break;
                 }
             }
-            cout << "Cập nhật: " << word.english << " (+10 EXP) → Level " << it->level 
+            cout << "Cập nhật: " << word.english << " (+10 EXP) → Level " << it->level
                  << " (" << it->stageName() << ")\n";
             if (oldLevel < it->level && it->level == 5) {
                 cout << "→ Đã đạt Cơ bản!\n";
@@ -355,7 +347,6 @@ public:
         saveToFile();
         return true;
     }
-
     void autoLearn(const string& eng) {
         auto it = find_if(words.begin(), words.end(),
                           [&](const Word& w) { return w.english == eng; });
@@ -370,7 +361,6 @@ public:
                 cout << "Ôn lại: " << eng << " (+5 EXP)\n";
             }
             it->isNew = false;
-
             int oldLevel = it->level;
             while (it->level < 10 && it->exp >= it->expToNextLevel()) {
                 it->exp -= it->expToNextLevel();
@@ -397,7 +387,6 @@ public:
         }
         saveToFile();
     }
-
     bool remove(const string& eng) {
         auto it = remove_if(words.begin(), words.end(),
                             [&](const Word& w) { return w.english == eng; });
@@ -408,21 +397,18 @@ public:
         saveToFile();
         return true;
     }
-
     void display() const {
         cout << "\n===== TỪ CỦA " << username << " =====\n";
         if (words.empty()) { cout << "(Trống)\n"; return; }
-
         vector<Word> notLearned, basic, advanced, mastered;
         for (const auto& w : words) {
             switch (w.getStage()) {
                 case LearnStage::NotLearned: notLearned.push_back(w); break;
-                case LearnStage::Basic:      basic.push_back(w); break;
-                case LearnStage::Advanced:   advanced.push_back(w); break;
-                case LearnStage::Mastered:   mastered.push_back(w); break;
+                case LearnStage::Basic: basic.push_back(w); break;
+                case LearnStage::Advanced: advanced.push_back(w); break;
+                case LearnStage::Mastered: mastered.push_back(w); break;
             }
         }
-
         auto printGroup = [](const string& title, const vector<Word>& list) {
             if (list.empty()) return;
             cout << "\n--- " << title << " (" << list.size() << ") ---\n";
@@ -434,25 +420,30 @@ public:
                      << " | " << w.topic << "\n";
             }
         };
-
         printGroup("CHƯA HỌC", notLearned);
         printGroup("CƠ BẢN (L1-5)", basic);
         printGroup("NÂNG CAO (L6-9)", advanced);
         printGroup("THÔNG THÁO (L10)", mastered);
     }
-
     bool contains(const string& eng) const {
         return any_of(words.begin(), words.end(),
                       [&](const Word& w) { return w.english == eng; });
     }
-
     const vector<Word>& getWords() const { return words; }
-
     int countMasteredInTopic(const string& topic) const {
         return count_if(words.begin(), words.end(),
             [&](const Word& w) { return w.getStage() == LearnStage::Mastered && w.topic == topic; });
     }
+    int getTotalEXP() const {
+        int total = 0;
+        for (const auto& w : words) {
+            total += w.exp;
+            if (w.level > 0) total += (w.level - 1) * 100;
+        }
+        return total;
+    }
 };
+
 // ==============================
 // Account
 // ==============================
@@ -503,7 +494,6 @@ public:
     bool isWordSaved(const string& eng) const {
         return isLoggedIn && savedWords && savedWords->contains(eng);
     }
-    
 };
 
 // ==============================
@@ -529,13 +519,11 @@ class GrammarTrainer {
     struct Question { string question; vector<string> options; int correct; };
     map<string, Theory> theories;
     map<string, vector<Question>> grammarQuestions;
-
     struct MCQ { string question; vector<string> options; int answer; };
     struct GapFill { string question, answer, hint, baseVerb; };
     struct Rearrange { string jumbled, correct; };
     struct PracticeTest { vector<MCQ> mcqs; vector<GapFill> gapfills; vector<Rearrange> rearranges; };
     vector<PracticeTest> practiceTests;
-
     string getTenseName(int c) {
         static const vector<string> names = {
             "", "PRESENT SIMPLE", "PRESENT CONTINUOUS", "PRESENT PERFECT", "PRESENT PERFECT CONTINUOUS",
@@ -544,23 +532,19 @@ class GrammarTrainer {
         };
         return (c >= 1 && c <= 12) ? names[c] : "";
     }
-
 public:
     bool loadFromFile(const string& filename) {
         ifstream file(filename);
         if (!file.is_open()) return false;
-
         string line, currentTense;
         Theory curTheory;
         vector<Question> curQs;
         Question curQ;
         bool inQuestion = false;
         int optionIndex = 0;
-
         while (getline(file, line)) {
             if (!line.empty() && line.back() == '\r') line.pop_back();
             if (line.empty()) continue;
-
             if (line.front() == '[' && line.back() == ']') {
                 string tag = line.substr(1, line.size() - 2);
                 if (tag == "END") {
@@ -574,7 +558,6 @@ public:
                 if (tag == "QUESTION") { inQuestion = true; optionIndex = 0; curQ = Question(); continue; }
                 currentTense = tag; curTheory = Theory(); inQuestion = false; continue;
             }
-
             if (!inQuestion && !currentTense.empty()) {
                 size_t pos = line.find(':');
                 if (pos != string::npos) {
@@ -588,7 +571,6 @@ public:
                 }
                 continue;
             }
-
             if (inQuestion) {
                 if (optionIndex == 0) { curQ.question = line; optionIndex = 1; }
                 else if (optionIndex >= 1 && optionIndex <= 4) {
@@ -609,26 +591,21 @@ public:
         file.close();
         return true;
     }
-
     bool loadPracticeFile(const string& filename) {
         ifstream f(filename);
         if (!f.is_open()) return false;
-
         string line;
         PracticeTest cur;
         bool inMCQ = false, inGap = false, inRearr = false;
         MCQ curMCQ; GapFill curGap; Rearrange curRearr;
         int mcqStep = 0;
-
         auto trimStr = [](string& s) {
             s.erase(0, s.find_first_not_of(" \t\r\n"));
             s.erase(s.find_last_not_of(" \t\r\n") + 1);
         };
-
         while (getline(f, line)) {
             if (!line.empty() && line.back() == '\r') line.pop_back();
             if (line.empty()) continue;
-
             if (line.front() == '[' && line.back() == ']') {
                 string tag = line.substr(1, line.size() - 2);
                 if (tag == "END") { practiceTests.push_back(cur); cur = PracticeTest(); inMCQ = inGap = inRearr = false; mcqStep = 0; }
@@ -637,7 +614,6 @@ public:
                 else if (tag == "REARRANGE") { inRearr = true; inMCQ = inGap = false; }
                 continue;
             }
-
             if (inMCQ) {
                 if (mcqStep == 0) { curMCQ = MCQ(); curMCQ.question = line; mcqStep = 1; }
                 else if (mcqStep >= 1 && mcqStep <= 4) {
@@ -660,7 +636,6 @@ public:
                     string left = line.substr(0, p);
                     string right = line.substr(p + 1);
                     trimStr(left); trimStr(right);
-
                     size_t verbStart = left.find(" (");
                     if (verbStart != string::npos && left.back() == ')') {
                         size_t verbEnd = left.size() - 1;
@@ -672,7 +647,6 @@ public:
                         g.baseVerb = "";
                         g.question = left;
                     }
-
                     size_t paren = right.find(" (");
                     if (paren != string::npos) {
                         g.answer = right.substr(0, paren);
@@ -702,17 +676,13 @@ public:
         f.close();
         return true;
     }
-
     void practiceTest() {
         if (practiceTests.empty()) { cout << "Chưa có bài ôn.\n"; return; }
-
         random_device rd; mt19937 g(rd());
         int testIdx = uniform_int_distribution<int>(0, (int)practiceTests.size() - 1)(g);
         const auto& test = practiceTests[testIdx];
-
         int score = 0, total = 0;
         cout << "\n=== ÔN TẬP TỔNG HỢP ===\n";
-
         auto compareAnswer = [](const string& user, const string& correct) -> bool {
             auto clean = [](string s) -> string {
                 string res;
@@ -731,12 +701,10 @@ public:
             };
             return clean(user) == clean(correct);
         };
-
         for (const auto& q : test.mcqs) {
             cout << "\n" << q.question << "\n";
             for (size_t i = 0; i < q.options.size(); ++i)
-                cout << "  " << i+1 << ". " << q.options[i] << "\n";
-
+                cout << " " << i+1 << ". " << q.options[i] << "\n";
             int ans = 0;
             while (true) {
                 string tmp = safeInput("Chọn (1-4): ");
@@ -750,20 +718,18 @@ public:
             else cout << "Sai! Đáp án: " << q.options[q.answer-1] << "\n";
             total++;
         }
-
         for (const auto& g : test.gapfills) {
             cout << "\n" << g.question;
-            if (!g.baseVerb.empty()) cout << "  (gợi ý: " << g.baseVerb << " → đổi thì phù hợp)";
+            if (!g.baseVerb.empty()) cout << " (gợi ý: " << g.baseVerb << " → đổi thì phù hợp)";
             cout << "\n→ ";
             string ans = safeInput();
             if (compareAnswer(ans, g.answer)) { cout << "Đúng!\n"; score++; }
             else {
                 cout << "Sai! Đáp án đúng: \"" << g.answer << "\"\n";
-                if (!g.hint.empty()) cout << "   Gợi ý: " << g.hint << "\n";
+                if (!g.hint.empty()) cout << " Gợi ý: " << g.hint << "\n";
             }
             total++;
         }
-
         for (const auto& r : test.rearranges) {
             cout << "\nSắp xếp: " << r.jumbled << "\n→ ";
             string ans = safeInput();
@@ -771,17 +737,14 @@ public:
             else cout << "Sai. Đáp án: " << r.correct << "\n";
             total++;
         }
-
         cout << "\nKết quả: " << score << "/" << total << "\n";
         safeInput("Nhấn Enter để tiếp tục...");
     }
-
     void learnGrammars() {
         while (true) {
             cout << "\n=== HỌC 12 THÌ ===\n";
             for (int i = 1; i <= 12; ++i) cout << i << ". " << getTenseName(i) << "\n";
             cout << "0. Thoát\n";
-
             int choice = 0;
             while (true) {
                 string tmp = safeInput("Chọn (0-12): ");
@@ -790,14 +753,12 @@ public:
                 cout << "Nhập số từ 0 đến 12.\n";
             }
             if (choice == 0) break;
-
             string tense = getTenseName(choice);
             if (theories.find(tense) == theories.end()) {
                 cout << "Chưa có dữ liệu cho thì này.\n";
                 safeInput("\nNhấn Enter để tiếp tục...");
                 continue;
             }
-
             const auto& t = theories[tense];
             cout << "\n===== " << tense << " =====\n";
             cout << "Khẳng định: " << t.formulaAff << "\n";
@@ -805,27 +766,23 @@ public:
             cout << "Nghi vấn: " << t.formulaQ << "\n";
             cout << "Dấu hiệu: " << t.signals << "\n";
             cout << "Ví dụ: " << t.example << "\n";
-
             auto it = grammarQuestions.find(tense);
             if (it == grammarQuestions.end() || it->second.empty()) {
                 cout << "Chưa có câu hỏi ôn tập cho thì này.\n";
                 safeInput("\nNhấn Enter để tiếp tục...");
                 continue;
             }
-
             vector<Question> source = it->second;
             int numQuestions = min(10, (int)source.size());
             vector<Question> quiz(source.begin(), source.begin() + numQuestions);
             random_device rd; mt19937 g(rd());
             shuffle(quiz.begin(), quiz.end(), g);
-
             int score = 0;
             cout << "\n--- ÔN TẬP " << tense << " (" << numQuestions << " CÂU) ---\n";
             for (int i = 0; i < numQuestions; ++i) {
                 cout << "\n" << i + 1 << ". " << quiz[i].question << "\n";
                 for (size_t j = 0; j < quiz[i].options.size(); ++j)
-                    cout << "  " << j + 1 << ". " << quiz[i].options[j] << "\n";
-
+                    cout << " " << j + 1 << ". " << quiz[i].options[j] << "\n";
                 int ans = 0;
                 while (true) {
                     string tmp = safeInput("Chọn (1-4): ");
@@ -835,7 +792,6 @@ public:
                     catch (...) {}
                     cout << "Nhập số từ 1 đến 4.\n";
                 }
-
                 if (ans == quiz[i].correct) { cout << "Đúng!\n"; score++; }
                 else {
                     cout << "Sai. Đáp án: " << quiz[i].correct << ". "
@@ -846,7 +802,6 @@ public:
             safeInput("\nNhấn Enter để tiếp tục...");
         }
     }
-
 };
 
 // ==============================
@@ -861,7 +816,6 @@ private:
     Account account;
     GrammarTrainer grammar;
     mt19937 rng;
-
     void refreshLearnedStatus() {
         set<string> learnedEng;
         if (account.isLogin() && account.getSavedWords()) {
@@ -873,17 +827,17 @@ private:
             w.learned = learnedEng.count(normalize(w.english));
         }
     }
-
-    void suggestNextTopic() {
+    string suggestNextTopic() {
         cout << "\nGợi ý chủ đề tiếp theo: ";
-        if (!topicList.empty()) {
-            uniform_int_distribution<> dis(0, topicList.size() - 1);
-            cout << topicList[dis(rng)] << "\n";
-        } else {
+        if (topicList.empty()) {
             cout << "Chưa có chủ đề.\n";
+            return "";
         }
+        uniform_int_distribution<> dis(0, topicList.size() - 1);
+        string suggested = topicList[dis(rng)];
+        cout << suggested << "\n";
+        return suggested;
     }
-
     int getChoice(int max, const string& prompt) {
         while (true) {
             string input = safeInput(prompt);
@@ -896,7 +850,6 @@ private:
             cout << "Nhập số từ 1 đến " << max << " (0 để thoát).\n";
         }
     }
-
     void viewTopicByIndex(int idx) {
         string selected = topicList[idx - 1];
         const auto& topic = topicMap.at(selected);
@@ -917,14 +870,12 @@ private:
             cout << "Phiên âm: " << w.ipaText << "\n";
             cout << "Ví dụ: " << w.example << "\n";
             cout << "Chủ đề: " << w.topic << "\n";
-#ifdef _WIN32
             string c = safeInput("\nPhát âm? (1: Có / 0: Không): ");
             if (trim(c) == "1") {
                 speak(w.english);
                 string r = safeInput("Lặp lại? (y/n): ");
                 if (!trim(r).empty() && tolower(trim(r)[0]) == 'y') speakRepeat(w.english);
             }
-#endif
             if (account.isLogin()) {
                 if (account.isWordSaved(w.english)) {
                     account.getSavedWords()->autoLearn(w.english);
@@ -936,13 +887,11 @@ private:
         }
         safeInput("\nNhấn Enter để quay lại danh sách chủ đề...");
     }
-
     void reviewVocabulary() {
         if (allWords.empty()) {
             cout << "Chưa có từ vựng để ôn!\n";
             safeInput("Nhấn Enter..."); return;
         }
-
         vector<Word> candidateList;
         if (account.isLogin() && account.getSavedWords()) {
             for (const auto& w : account.getSavedWords()->getWords()) {
@@ -955,18 +904,15 @@ private:
         } else {
             candidateList = allWords;
         }
-
         if (candidateList.empty()) {
             cout << "Bạn chưa học từ nào!\n";
             safeInput("Nhấn Enter..."); return;
         }
-
         cout << "\n=== ÔN TẬP TỪ VỰNG ===\n";
         cout << "1. Ôn từ mới (ưu tiên level thấp)\n";
         cout << "2. Ôn ngẫu nhiên\n";
         int modeChoice = getChoice(2, "Chọn kiểu ôn: ");
         if (modeChoice == 0) return;
-
         vector<Word> reviewList = candidateList;
         if (modeChoice == 1) {
             sort(reviewList.begin(), reviewList.end(), [&](const Word& a, const Word& b) {
@@ -981,33 +927,26 @@ private:
         } else {
             shuffle(reviewList.begin(), reviewList.end(), rng);
         }
-
         reviewList.resize(min(10, (int)reviewList.size()));
-
         cout << "\nSố từ: " << reviewList.size() << "\n";
         cout << "1. Flashcard (Anh to Việt)\n";
         cout << "2. Trắc nghiệm (4 đáp án)\n";
         cout << "3. Điền vào chỗ trống\n";
-        cout << "4. Nghe và viết chính tả (Windows)\n";
+        cout << "4. Nghe và viết chính tả\n";
         cout << "0. Thoát\n";
-
         int mode = getChoice(4, "Chọn kiểu ôn: ");
         if (mode == 0) return;
-
         int score = 0;
         for (size_t i = 0; i < reviewList.size(); ++i) {
             const Word& w = reviewList[i];
             bool correct = false;
-
             if (mode == 1) {
                 cout << "\n[" << i+1 << "/" << reviewList.size() << "] Từ: " << w.english << "\n";
                 safeInput("→ Nhấn Enter để xem nghĩa...");
                 cout << "Nghĩa: " << w.vietnamese << "\n";
                 cout << "IPA: " << w.ipaText << "\n";
                 cout << "Ví dụ: " << w.example << "\n";
-#ifdef _WIN32
                 speak(w.english);
-#endif
                 correct = true;
             }
             else if (mode == 2) {
@@ -1019,11 +958,9 @@ private:
                 for (int j = 0; j < 3 && j < (int)others.size(); ++j)
                     options.push_back(others[j].vietnamese);
                 shuffle(options.begin(), options.end(), rng);
-
                 cout << "\n[" << i+1 << "/" << reviewList.size() << "] Nghĩa của \"" << w.english << "\" là?\n";
                 for (size_t j = 0; j < options.size(); ++j)
                     cout << " " << j+1 << ". " << options[j] << "\n";
-
                 int ans = 0;
                 while (true) {
                     string in = safeInput("Chọn (1-4): ");
@@ -1051,7 +988,6 @@ private:
                 }
             }
             else if (mode == 4) {
-#ifdef _WIN32
                 cout << "\n[" << i+1 << "/" << reviewList.size() << "] Nghe và viết từ:\n";
                 speak(w.english);
                 std::this_thread::sleep_for(chrono::milliseconds(500));
@@ -1062,26 +998,41 @@ private:
                 } else {
                     cout << "Sai! Từ là: " << w.english << "\n";
                 }
-#else
-                cout << "Chế độ này chỉ hỗ trợ Windows!\n";
-                continue;
-#endif
             }
-
             if (correct && account.isLogin()) {
                 account.getSavedWords()->autoLearn(w.english);
             }
         }
-
         if (mode >= 2 && mode <= 4) {
             cout << "\nKết quả: " << score << "/" << reviewList.size() << "\n";
         }
         safeInput("Nhấn Enter để tiếp tục...");
     }
-
+    void showSearchHistory() {
+        auto history = loadHistory(10);
+        cout << "\n=== LỊCH SỬ TRA TỪ (10 từ gần nhất) ===\n";
+        if (history.empty()) {
+            cout << "(Chưa tra từ nào)\n";
+        } else {
+            for (int i = history.size() - 1; i >= 0; --i) {
+                cout << (history.size() - i) << ". " << history[i] << "\n";
+            }
+        }
+        safeInput("\nNhấn Enter để quay lại...");
+    }
+    void deleteSavedWord() {
+        string eng = safeInput("Nhập từ tiếng Anh muốn xóa: ");
+        eng = trim(eng);
+        if (eng.empty()) return;
+        if (account.getSavedWords()->remove(eng)) {
+            cout << "Đã xóa: " << eng << "\n";
+        } else {
+            cout << "Không tìm thấy từ \"" << eng << "\" trong danh sách.\n";
+        }
+        buildData();
+    }
 public:
     VocabularyApp() : rng(chrono::steady_clock::now().time_since_epoch().count()) {}
-
     vector<string> parseCSVLine(const string& line) {
         vector<string> parts;
         string current;
@@ -1104,7 +1055,6 @@ public:
         if (!current.empty()) parts.push_back(trim(current));
         return parts;
     }
-
     void buildData() {
         allWords.clear();
         topicMap.clear();
@@ -1153,7 +1103,6 @@ public:
         refreshLearnedStatus();
         cout << "Đã tải " << total << " từ vựng từ " << topicMap.size() << " chủ đề!\n\n";
     }
-
     void viewTopic() {
         if (topicList.empty()) {
             cout << "Chưa có dữ liệu. Vui lòng thêm file CSV vào thư mục Data.\n";
@@ -1176,24 +1125,23 @@ public:
             int choice = getChoice(maxChoice, "\nChọn (0 để thoát): ");
             if (choice == 0) return;
             if (choice == suggestOption) {
-                suggestNextTopic();
-                if (!topicList.empty()) {
-                    cout << "Nhấn 1 để vào ngay chủ đề này!\n";
+                string suggested = suggestNextTopic();
+                if (!suggested.empty()) {
+                    cout << "Nhấn 1 để vào ngay chủ đề \"" << suggested << "\"!\n";
                     cout << "Nhấn Enter để quay lại.\n";
                     string go = safeInput("→ ");
                     if (trim(go) == "1") {
-                        uniform_int_distribution<> dis(0, topicList.size() - 1);
-                        viewTopicByIndex(dis(rng) + 1);
+                        auto it = find(topicList.begin(), topicList.end(), suggested);
+                        if (it != topicList.end()) {
+                            viewTopicByIndex(it - topicList.begin() + 1);
+                        }
                     }
-                } else {
-                    safeInput("Nhấn Enter để tiếp tục...");
                 }
                 continue;
             }
             viewTopicByIndex(choice);
         }
     }
-
     void searchWord() {
         cout << "\nTRA TỪ ĐIỂN\n";
         string input = safeInput("Nhập từ cần tra: ");
@@ -1209,7 +1157,6 @@ public:
             cout << "Phiên âm: " << w->ipaText << "\n";
             cout << "Ví dụ: " << w->example << "\n";
             cout << "Chủ đề: " << w->topic << "\n";
-#ifdef _WIN32
             string c = safeInput("\nPhát âm? (1: Có / 0: Không): ");
             if (trim(c) == "1") {
                 speak(w->english);
@@ -1217,7 +1164,6 @@ public:
                 if (!trim(r).empty() && tolower(trim(r)[0]) == 'y')
                     speakRepeat(w->english);
             }
-#endif
             if (account.isLogin()) {
                 if (account.isWordSaved(w->english)) {
                     account.getSavedWords()->autoLearn(w->english);
@@ -1236,13 +1182,11 @@ public:
         }
         cout << "────────────────────\n";
     }
-
     void showProgress() {
         refreshLearnedStatus();
         int total = allWords.size();
         int learned = 0, basic = 0, advanced = 0, mastered = 0;
         map<string, int> topicMastered;
-
         if (account.isLogin() && account.getSavedWords()) {
             for (const auto& w : account.getSavedWords()->getWords()) {
                 if (w.learned) learned++;
@@ -1252,7 +1196,6 @@ public:
                 if (w.isMastered) topicMastered[w.topic]++;
             }
         }
-
         cout << fixed << setprecision(1);
         cout << "\n=== TIẾN ĐỘ HỌC TẬP CHI TIẾT ===\n";
         cout << "Tổng từ trong từ điển: " << total << "\n";
@@ -1260,13 +1203,9 @@ public:
         cout << " • Cơ bản (L1-5): " << basic << "\n";
         cout << " • Nâng cao (L6-9): " << advanced << "\n";
         cout << " • Thông thạo (L10): " << mastered << " ★\n";
-
         if (account.isLogin()) {
-            int totalEXP = 0;
-            for (const auto& w : account.getSavedWords()->getWords()) totalEXP += w.exp;
-            cout << "Tổng EXP: " << totalEXP << " điểm\n";
+            cout << "Tổng EXP: " << account.getSavedWords()->getTotalEXP() << " điểm\n";
         }
-
         cout << "\n--- TIẾN ĐỘ THEO CHỦ ĐỀ (chỉ tính từ thông thạo) ---\n";
         for (const auto& t : topicList) {
             int m = account.isLogin() ? account.getSavedWords()->countMasteredInTopic(t) : 0;
@@ -1276,7 +1215,6 @@ public:
         }
         cout << "────────────────────\n";
     }
-
     void menu() {
         enableUTF8();
         buildData();
@@ -1284,73 +1222,67 @@ public:
             cout << "Cảnh báo: Không tải được grammar_data.txt\n";
         if (!grammar.loadPracticeFile("practice_data.txt"))
             cout << "Cảnh báo: Không tải được practice_data.txt\n";
-        auto history = loadHistory();
-        if (!history.empty()) {
-            cout << "\nLỊCH SỬ TRA TỪ (5 từ gần nhất)\n";
-            for (int i = history.size() - 1; i >= 0; --i)
-                cout << "• " << history[i] << "\n";
-            cout << "────────────────────\n";
-        }
+
         int choice;
         do {
             cout << "\n════════════════════════════════════\n";
             cout << " TỪ ĐIỂN ANH - VIỆT PRO+ \n";
             cout << "════════════════════════════════════\n";
-            if (account.isLogin()) cout << "Người dùng: " << account.getUsername() << "\n";
+
+            if (account.isLogin()) {
+                cout << "Người dùng: " << account.getUsername()
+                     << " | EXP: " << account.getSavedWords()->getTotalEXP() << " ★\n";
+            }
+
             cout << "1. Xem từ theo chủ đề\n";
             cout << "2. Tra từ (Anh to Việt)\n";
-            cout << "3. Xem tiến độ học\n";
-            cout << "4. Từ đã lưu (cá nhân)\n";
-            cout << "5. Đăng nhập / Đăng ký\n";
-            cout << "6. Đăng xuất\n";
-            cout << "7. Xóa từ đã lưu\n";
-            if (account.isLogin()) {
-                cout << "8. Ôn 12 thì tiếng Anh\n";
-                cout << "9. Ôn tập Grammar tổng hợp\n";
-                cout << "10. Ôn tập từ vựng (10 từ, 2 chế độ)\n";
+
+            int maxChoice;
+            if (!account.isLogin()) {
+                cout << "3. Đăng nhập\n";
+                cout << "4. Đăng ký\n";
+                cout << "0. Thoát\n";
+                maxChoice = 4;
+            } else {
+                cout << "3. Xem tiến độ học\n";
+                cout << "4. Từ đã lưu (cá nhân)\n";
+                cout << "5. Ôn tập từ vựng\n";
+                cout << "6. Học 12 thì tiếng Anh\n";
+                cout << "7. Ôn tập Grammar tổng hợp\n";
+                cout << "8. Lịch sử tra từ\n";
+                cout << "9. Xóa từ đã lưu\n";
+                cout << "10. Đăng xuất\n";
+                cout << "0. Thoát\n";
+                maxChoice = 10;
             }
-            cout << "0. Thoát\n";
+
             cout << "────────────────────────────────────\n";
-            int maxChoice = account.isLogin() ? 10 : 7;
             choice = getChoice(maxChoice, "Chọn (0-" + to_string(maxChoice) + "): ");
             if (choice == 0) break;
-            switch (choice) {
-                case 1: viewTopic(); refreshLearnedStatus(); break;
-                case 2: searchWord(); refreshLearnedStatus(); break;
-                case 3: showProgress(); break;
-                case 4: 
-                    if (account.isLogin() && account.getSavedWords()) {
-                        account.getSavedWords()->display(); 
-                    } else {
-                        cout << "Bạn chưa đăng nhập!\n";
-                    }
-                    break;
-                case 5: {
-                    cout << "1. Đăng nhập\n2. Đăng ký\n";
-                    int sub = getChoice(2, "Chọn: ");
-                    if (sub == 1) account.login();
-                    else if (sub == 2) account.signUp();
-                    buildData();
-                    break;
+
+            if (!account.isLogin()) {
+                switch (choice) {
+                    case 1: viewTopic(); break;
+                    case 2: searchWord(); break;
+                    case 3: account.login(); buildData(); break;
+                    case 4: account.signUp(); buildData(); break;
                 }
-                case 6: account.logout(); buildData(); break;
-                case 7: {
-                    if (!account.isLogin()) { cout << "Đăng nhập trước!\n"; break; }
-                    string eng = safeInput("Nhập từ tiếng Anh muốn xóa: ");
-                    if (!trim(eng).empty()) {
-                        if (account.getSavedWords()->remove(trim(eng)))
-                            cout << "Đã xóa: " << trim(eng) << "\n";
-                        else
-                            cout << "Không tìm thấy từ.\n";
-                    }
-                    buildData();
-                    break;
+            } else {
+                switch (choice) {
+                    case 1: viewTopic(); break;
+                    case 2: searchWord(); break;
+                    case 3: showProgress(); break;
+                    case 4: account.getSavedWords()->display(); break;
+                    case 5: reviewVocabulary(); break;
+                    case 6: grammar.learnGrammars(); break;
+                    case 7: grammar.practiceTest(); break;
+                    case 8: showSearchHistory(); break;
+                    case 9: deleteSavedWord(); break;
+                    case 10: account.logout(); buildData(); break;
                 }
-                case 8: if (account.isLogin()) grammar.learnGrammars(); break;
-                case 9: if (account.isLogin()) grammar.practiceTest(); break;
-                case 10: if (account.isLogin()) reviewVocabulary(); else cout << "Đăng nhập để ôn từ đã lưu!\n"; break;
             }
         } while (true);
+
         if (account.isLogin()) account.logout();
         cout << "\nCảm ơn bạn đã sử dụng từ điển!\n";
     }
