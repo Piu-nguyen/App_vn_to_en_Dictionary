@@ -1,0 +1,935 @@
+[PRESENT SIMPLE]
+FORMULA_AFF: S + V(s/es)
+FORMULA_NEG: S + do/does + not + V
+FORMULA_Q: Do/Does + S + V?
+SIGNALS: always, usually, every day, often, never
+EXAMPLE: She plays tennis every Sunday.
+[QUESTION]
+I _____ to school every day.
+1. go
+2. goes
+3. going
+4. went
+ANSWER: 1
+[QUESTION]
+He _____ coffee every morning.
+1. drink
+2. drinks
+3. drinking
+4. drank
+ANSWER: 2
+[QUESTION]
+They _____ soccer on weekends.
+1. play
+2. plays
+3. playing
+4. played
+ANSWER: 1
+[QUESTION]
+The sun _____ in the east.
+1. rise
+2. rises
+3. rising
+4. rose
+ANSWER: 2
+[QUESTION]
+She _____ English very well.
+1. speak
+2. speaks
+3. speaking
+4. spoke
+ANSWER: 2
+[QUESTION]
+We _____ TV in the evening.
+1. watch
+2. watches
+3. watching
+4. watched
+ANSWER: 1
+[QUESTION]
+Cats _____ milk.
+1. like
+2. likes
+3. liking
+4. liked
+ANSWER: 1
+[QUESTION]
+My brother _____ video games.
+1. play
+2. plays
+3. playing
+4. played
+ANSWER: 2
+[QUESTION]
+Water _____ at 100°C.
+1. boil
+2. boils
+3. boiling
+4. boiled
+ANSWER: 2
+[QUESTION]
+Birds _____ in the sky.
+1. fly
+2. flies
+3. flying
+4. flew
+ANSWER: 1
+[END]
+
+[PRESENT CONTINUOUS]
+FORMULA_AFF: S + am/is/are + V-ing
+FORMULA_NEG: S + am/is/are + not + V-ing
+FORMULA_Q: Am/Is/Are + S + V-ing?
+SIGNALS: now, at the moment, today, Look!
+EXAMPLE: I am studying English now.
+[QUESTION]
+She _____ TV right now.
+1. watch
+2. watches
+3. is watching
+4. watched
+ANSWER: 3
+[QUESTION]
+They _____ football at the moment.
+1. play
+2. plays
+3. are playing
+4. played
+ANSWER: 3
+[QUESTION]
+I _____ dinner now.
+1. cook
+2. cooks
+3. am cooking
+4. cooked
+ANSWER: 3
+[QUESTION]
+He _____ in the pool.
+1. swim
+2. swims
+3. is swimming
+4. swam
+ANSWER: 3
+[QUESTION]
+We _____ to music.
+1. listen
+2. listens
+3. are listening
+4. listened
+ANSWER: 3
+[QUESTION]
+The baby _____.
+1. sleep
+2. sleeps
+3. is sleeping
+4. slept
+ANSWER: 3
+[QUESTION]
+Look! It _____.
+1. rain
+2. rains
+3. is raining
+4. rained
+ANSWER: 3
+[QUESTION]
+You _____ very fast.
+1. run
+2. runs
+3. are running
+4. ran
+ANSWER: 3
+[QUESTION]
+The dog _____ the cat.
+1. chase
+2. chases
+3. is chasing
+4. chased
+ANSWER: 3
+[QUESTION]
+I _____ a letter now.
+1. write
+2. writes
+3. am writing
+4. wrote
+ANSWER: 3
+[END]
+
+[PRESENT PERFECT]
+FORMULA_AFF: S + have/has + V3
+FORMULA_NEG: S + have/has + not + V3
+FORMULA_Q: Have/Has + S + V3?
+SIGNALS: already, yet, just, ever, never, since, for
+EXAMPLE: I have just finished my homework.
+[QUESTION]
+She _____ to Paris.
+1. go
+2. went
+3. has gone
+4. is going
+ANSWER: 3
+[QUESTION]
+We _____ this movie before.
+1. see
+2. saw
+3. have seen
+4. are seeing
+ANSWER: 3
+[QUESTION]
+He _____ his keys.
+1. lose
+2. lost
+3. has lost
+4. is losing
+ANSWER: 3
+[QUESTION]
+I _____ breakfast yet.
+1. eat
+2. ate
+3. have eaten
+4. not eaten
+ANSWER: 4
+[QUESTION]
+They _____ here since 2010.
+1. live
+2. lived
+3. have lived
+4. are living
+ANSWER: 3
+[QUESTION]
+You _____ me a gift.
+1. give
+2. gave
+3. have given
+4. are giving
+ANSWER: 3
+[QUESTION]
+It _____ raining all day.
+1. rain
+2. rained
+3. has rained
+4. is raining
+ANSWER: 3
+[QUESTION]
+She _____ three books this month.
+1. read
+2. reads
+3. has read
+4. is reading
+ANSWER: 3
+[QUESTION]
+We _____ this restaurant before.
+1. visit
+2. visited
+3. have visited
+4. are visiting
+ANSWER: 3
+[QUESTION]
+He _____ never _____ sushi.
+1. eat
+2. ate
+3. has eaten
+4. is eating
+ANSWER: 3
+[END]
+
+[PRESENT PERFECT CONTINUOUS]
+FORMULA_AFF: S + have/has + been + V-ing
+FORMULA_NEG: S + have/has + not + been + V-ing
+FORMULA_Q: Have/Has + S + been + V-ing?
+SIGNALS: for, since, all day, lately
+EXAMPLE: I have been studying for three hours.
+[QUESTION]
+She _____ English for two years.
+1. study
+2. studied
+3. has been studying
+4. is studying
+ANSWER: 3
+[QUESTION]
+They _____ football all morning.
+1. play
+2. played
+3. have been playing
+4. are playing
+ANSWER: 3
+[QUESTION]
+I _____ this book since Monday.
+1. read
+2. read
+3. have been reading
+4. am reading
+ANSWER: 3
+[QUESTION]
+He _____ in London since 2015.
+1. live
+2. lived
+3. has been living
+4. is living
+ANSWER: 3
+[QUESTION]
+We _____ for the bus for 20 minutes.
+1. wait
+2. waited
+3. have been waiting
+4. are waiting
+ANSWER: 3
+[QUESTION]
+The baby _____ all night.
+1. cry
+2. cried
+3. has been crying
+4. is crying
+ANSWER: 3
+[QUESTION]
+You _____ too much lately.
+1. work
+2. worked
+3. have been working
+4. are working
+ANSWER: 3
+[QUESTION]
+It _____ raining since morning.
+1. rain
+2. rained
+3. has been raining
+4. is raining
+ANSWER: 3
+[QUESTION]
+She _____ piano for hours.
+1. practice
+2. practiced
+3. has been practicing
+4. is practicing
+ANSWER: 3
+[QUESTION]
+They _____ this game all day.
+1. play
+2. played
+3. have been playing
+4. are playing
+ANSWER: 3
+[END]
+
+[PAST SIMPLE]
+FORMULA_AFF: S + V2
+FORMULA_NEG: S + did + not + V
+FORMULA_Q: Did + S + V?
+SIGNALS: yesterday, last week, ago, in 2020
+EXAMPLE: I visited my grandmother yesterday.
+[QUESTION]
+She _____ to school yesterday.
+1. go
+2. went
+3. goes
+4. going
+ANSWER: 2
+[QUESTION]
+They _____ a movie last night.
+1. watch
+2. watched
+3. watches
+4. watching
+ANSWER: 2
+[QUESTION]
+He _____ his homework.
+1. do
+2. did
+3. does
+4. doing
+ANSWER: 2
+[QUESTION]
+We _____ in the park.
+1. play
+2. played
+3. plays
+4. playing
+ANSWER: 2
+[QUESTION]
+I _____ a letter last week.
+1. write
+2. wrote
+3. writes
+4. writing
+ANSWER: 2
+[QUESTION]
+The train _____ at 9 AM.
+1. arrive
+2. arrived
+3. arrives
+4. arriving
+ANSWER: 2
+[QUESTION]
+She _____ a cake.
+1. bake
+2. baked
+3. bakes
+4. baking
+ANSWER: 2
+[QUESTION]
+You _____ very well.
+1. sing
+2. sang
+3. sings
+4. singing
+ANSWER: 2
+[QUESTION]
+He _____ his bike.
+1. ride
+2. rode
+3. rides
+4. riding
+ANSWER: 2
+[QUESTION]
+They _____ to the museum.
+1. go
+2. went
+3. goes
+4. going
+ANSWER: 2
+[END]
+
+[PAST CONTINUOUS]
+FORMULA_AFF: S + was/were + V-ing
+FORMULA_NEG: S + was/were + not + V-ing
+FORMULA_Q: Was/Were + S + V-ing?
+SIGNALS: at 7 PM, while, when
+EXAMPLE: I was sleeping when you called.
+[QUESTION]
+She _____ TV at 8 PM.
+1. watch
+2. watched
+3. was watching
+4. is watching
+ANSWER: 3
+[QUESTION]
+They _____ football when it rained.
+1. play
+2. played
+3. were playing
+4. are playing
+ANSWER: 3
+[QUESTION]
+I _____ dinner at 6 PM.
+1. cook
+2. cooked
+3. was cooking
+4. am cooking
+ANSWER: 3
+[QUESTION]
+He _____ in the garden.
+1. work
+2. worked
+3. was working
+4. is working
+ANSWER: 3
+[QUESTION]
+We _____ to music.
+1. listen
+2. listened
+3. were listening
+4. are listening
+ANSWER: 3
+[QUESTION]
+The kids _____ in the pool.
+1. swim
+2. swam
+3. were swimming
+4. are swimming
+ANSWER: 3
+[QUESTION]
+You _____ very loudly.
+1. talk
+2. talked
+3. were talking
+4. are talking
+ANSWER: 3
+[QUESTION]
+It _____ when we left.
+1. rain
+2. rained
+3. was raining
+4. is raining
+ANSWER: 3
+[QUESTION]
+She _____ a book.
+1. read
+2. read
+3. was reading
+4. is reading
+ANSWER: 3
+[QUESTION]
+They _____ the house.
+1. clean
+2. cleaned
+3. were cleaning
+4. are cleaning
+ANSWER: 3
+[END]
+
+[PAST PERFECT]
+FORMULA_AFF: S + had + V3
+FORMULA_NEG: S + had + not + V3
+FORMULA_Q: Had + S + V3?
+SIGNALS: before, by the time, already
+EXAMPLE: She had left before I arrived.
+[QUESTION]
+He _____ before the movie started.
+1. arrive
+2. arrived
+3. had arrived
+4. arriving
+ANSWER: 3
+[QUESTION]
+They _____ dinner when I came.
+1. eat
+2. ate
+3. had eaten
+4. eating
+ANSWER: 3
+[QUESTION]
+I _____ the book before class.
+1. finish
+2. finished
+3. had finished
+4. finishing
+ANSWER: 3
+[QUESTION]
+She _____ the letter.
+1. write
+2. wrote
+3. had written
+4. writing
+ANSWER: 3
+[QUESTION]
+We _____ the train.
+1. miss
+2. missed
+3. had missed
+4. missing
+ANSWER: 3
+[QUESTION]
+You _____ your homework.
+1. do
+2. did
+3. had done
+4. doing
+ANSWER: 3
+[QUESTION]
+The rain _____ before we went out.
+1. stop
+2. stopped
+3. had stopped
+4. stopping
+ANSWER: 3
+[QUESTION]
+He _____ the news.
+1. hear
+2. heard
+3. had heard
+4. hearing
+ANSWER: 3
+[QUESTION]
+They _____ the museum.
+1. visit
+2. visited
+3. had visited
+4. visiting
+ANSWER: 3
+[QUESTION]
+She _____ asleep.
+1. fall
+2. fell
+3. had fallen
+4. falling
+ANSWER: 3
+[END]
+
+[PAST PERFECT CONTINUOUS]
+FORMULA_AFF: S + had + been + V-ing
+FORMULA_NEG: S + had + not + been + V-ing
+FORMULA_Q: Had + S + been + V-ing?
+SIGNALS: for, since, before
+EXAMPLE: I had been waiting for two hours.
+[QUESTION]
+She _____ for three hours.
+1. wait
+2. waited
+3. had been waiting
+4. waiting
+ANSWER: 3
+[QUESTION]
+They _____ all day.
+1. work
+2. worked
+3. had been working
+4. working
+ANSWER: 3
+[QUESTION]
+I _____ since morning.
+1. study
+2. studied
+3. had been studying
+4. studying
+ANSWER: 3
+[QUESTION]
+He _____ in the gym.
+1. exercise
+2. exercised
+3. had been exercising
+4. exercising
+ANSWER: 3
+[QUESTION]
+We _____ for the bus.
+1. stand
+2. stood
+3. had been standing
+4. standing
+ANSWER: 3
+[QUESTION]
+The team _____ for weeks.
+1. practice
+2. practiced
+3. had been practicing
+4. practicing
+ANSWER: 3
+[QUESTION]
+You _____ too long.
+1. sleep
+2. slept
+3. had been sleeping
+4. sleeping
+ANSWER: 3
+[QUESTION]
+It _____ all night.
+1. rain
+2. rained
+3. had been raining
+4. raining
+ANSWER: 3
+[QUESTION]
+She _____ the piano.
+1. play
+2. played
+3. had been playing
+4. playing
+ANSWER: 3
+[QUESTION]
+They _____ the project.
+1. discuss
+2. discussed
+3. had been discussing
+4. discussing
+ANSWER: 3
+[END]
+
+[FUTURE SIMPLE]
+FORMULA_AFF: S + will + V
+FORMULA_NEG: S + will + not + V
+FORMULA_Q: Will + S + V?
+SIGNALS: tomorrow, next week, soon, I think
+EXAMPLE: I will call you tomorrow.
+[QUESTION]
+She _____ you tomorrow.
+1. call
+2. calls
+3. will call
+4. calling
+ANSWER: 3
+[QUESTION]
+They _____ to Paris next month.
+1. travel
+2. travels
+3. will travel
+4. traveling
+ANSWER: 3
+[QUESTION]
+I _____ my homework later.
+1. do
+2. does
+3. will do
+4. doing
+ANSWER: 3
+[QUESTION]
+He _____ a new car.
+1. buy
+2. buys
+3. will buy
+4. buying
+ANSWER: 3
+[QUESTION]
+We _____ the movie tonight.
+1. watch
+2. watches
+3. will watch
+4. watching
+ANSWER: 3
+[QUESTION]
+It _____ rain tomorrow.
+1. rain
+2. rains
+3. will rain
+4. raining
+ANSWER: 3
+[QUESTION]
+You _____ pass the exam.
+1. pass
+2. passes
+3. will pass
+4. passing
+ANSWER: 3
+[QUESTION]
+The train _____ at 10 AM.
+1. leave
+2. leaves
+3. will leave
+4. leaving
+ANSWER: 3
+[QUESTION]
+She _____ a doctor.
+1. become
+2. becomes
+3. will become
+4. becoming
+ANSWER: 3
+[QUESTION]
+They _____ us soon.
+1. visit
+2. visits
+3. will visit
+4. visiting
+ANSWER: 3
+[END]
+
+[FUTURE CONTINUOUS]
+FORMULA_AFF: S + will + be + V-ing
+FORMULA_NEG: S + will + not + be + V-ing
+FORMULA_Q: Will + S + be + V-ing?
+SIGNALS: at 5 PM tomorrow, this time next week
+EXAMPLE: I will be traveling at this time tomorrow.
+[QUESTION]
+She _____ at 8 PM tomorrow.
+1. study
+2. studies
+3. will be studying
+4. studied
+ANSWER: 3
+[QUESTION]
+They _____ football this time.
+1. play
+2. plays
+3. will be playing
+4. played
+ANSWER: 3
+[QUESTION]
+I _____ dinner at 7 PM.
+1. cook
+2. cooks
+3. will be cooking
+4. cooked
+ANSWER: 3
+[QUESTION]
+He _____ in the meeting.
+1. speak
+2. speaks
+3. will be speaking
+4. spoke
+ANSWER: 3
+[QUESTION]
+We _____ TV tonight.
+1. watch
+2. watches
+3. will be watching
+4. watched
+ANSWER: 3
+[QUESTION]
+You _____ when I call.
+1. sleep
+2. sleeps
+3. will be sleeping
+4. slept
+ANSWER: 3
+[QUESTION]
+It _____ tomorrow evening.
+1. rain
+2. rains
+3. will be raining
+4. rained
+ANSWER: 3
+[QUESTION]
+The baby _____ at noon.
+1. sleep
+2. sleeps
+3. will be sleeping
+4. slept
+ANSWER: 3
+[QUESTION]
+She _____ the piano.
+1. play
+2. plays
+3. will be playing
+4. played
+ANSWER: 3
+[QUESTION]
+They _____ the house.
+1. clean
+2. cleans
+3. will be cleaning
+4. cleaned
+ANSWER: 3
+[END]
+
+[FUTURE PERFECT]
+FORMULA_AFF: S + will + have + V3
+FORMULA_NEG: S + will + not + have + V3
+FORMULA_Q: Will + S + have + V3?
+SIGNALS: by tomorrow, by 2026, before
+EXAMPLE: I will have finished by 5 PM.
+[QUESTION]
+She _____ the report by Friday.
+1. finish
+2. finishes
+3. will have finished
+4. finishing
+ANSWER: 3
+[QUESTION]
+They _____ the project by then.
+1. complete
+2. completes
+3. will have completed
+4. completing
+ANSWER: 3
+[QUESTION]
+I _____ my degree by 2026.
+1. get
+2. gets
+3. will have gotten
+4. getting
+ANSWER: 3
+[QUESTION]
+He _____ the book.
+1. read
+2. reads
+3. will have read
+4. reading
+ANSWER: 3
+[QUESTION]
+We _____ the exam.
+1. pass
+2. passes
+3. will have passed
+4. passing
+ANSWER: 3
+[QUESTION]
+You _____ the letter.
+1. write
+2. writes
+3. will have written
+4. writing
+ANSWER: 3
+[QUESTION]
+The train _____ by 9 AM.
+1. arrive
+2. arrives
+3. will have arrived
+4. arriving
+ANSWER: 3
+[QUESTION]
+She _____ dinner.
+1. cook
+2. cooks
+3. will have cooked
+4. cooking
+ANSWER: 3
+[QUESTION]
+They _____ the house.
+1. clean
+2. cleans
+3. will have cleaned
+4. cleaning
+ANSWER: 3
+[QUESTION]
+He _____ the car.
+1. fix
+2. fixes
+3. will have fixed
+4. fixing
+ANSWER: 3
+[END]
+
+[FUTURE PERFECT CONTINUOUS]
+FORMULA_AFF: S + will + have + been + V-ing
+FORMULA_NEG: S + will + not + have + been + V-ing
+FORMULA_Q: Will + S + have + been + V-ing?
+SIGNALS: by next year, for 10 years by then, by the time
+EXAMPLE: By 2030, I will have been working here for 10 years.
+[QUESTION]
+By next month, she _____ here for 2 years.
+1. work
+2. worked
+3. will have been working
+4. working
+ANSWER: 3
+[QUESTION]
+By 2026, they _____ English for 5 years.
+1. study
+2. studied
+3. will have been studying
+4. studying
+ANSWER: 3
+[QUESTION]
+By tomorrow, I _____ on this project for a week.
+1. work
+2. worked
+3. will have been working
+4. working
+ANSWER: 3
+[QUESTION]
+By the time he arrives, we _____ for 3 hours.
+1. wait
+2. waited
+3. will have been waiting
+4. waiting
+ANSWER: 3
+[QUESTION]
+By 2030, she _____ the piano for 15 years.
+1. play
+2. played
+3. will have been playing
+4. playing
+ANSWER: 3
+[QUESTION]
+By next year, you _____ this company for a decade.
+1. serve
+2. served
+3. will have been serving
+4. serving
+ANSWER: 3
+[QUESTION]
+By 6 PM, it _____ all day.
+1. rain
+2. rained
+3. will have been raining
+4. raining
+ANSWER: 3
+[QUESTION]
+By the end of the course, he _____ for 200 hours.
+1. practice
+2. practiced
+3. will have been practicing
+4. practicing
+ANSWER: 3
+[QUESTION]
+By Friday, the team _____ on the report for a month.
+1. work
+2. worked
+3. will have been working
+4. working
+ANSWER: 3
+[QUESTION]
+By 2027, I _____ this book for 2 years.
+1. write
+2. wrote
+3. will have been writing
+4. writing
+ANSWER: 3
+[END]

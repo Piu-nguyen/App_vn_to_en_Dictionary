@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LoginDialog</class>
+ <widget class="QDialog" name="LoginDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Đăng nhập / Đăng ký</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">
+    QDialog { background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #667eea, stop:1 #764ba2); }
+    QLabel { color: white; font-size: 16px; }
+    QLineEdit { padding: 12px; border-radius: 10px; font-size: 16px; }
+    QPushButton { background: #ff6b6b; color: white; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 16px; }
+    QPushButton:hover { background: #ee5a52; }
+   </string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>&lt;h1&gt;English Dictionary Pro+&lt;/h1&gt;</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="usernameEdit">
+     <property name="placeholderText">
+      <string>Tên người dùng</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="passwordEdit">
+     <property name="placeholderText">
+      <string>Mật khẩu</string>
+     </property>
+     <property name="echoMode">
+      <enum>QLineEdit::Password</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout">
+     <item>
+      <widget class="QPushButton" name="loginButton">
+       <property name="text">
+        <string>Đăng nhập</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="registerButton">
+       <property name="text">
+        <string>Đăng ký</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QPushButton" name="guestButton">
+     <property name="text">
+      <string>Dùng với tư cách khách (không lưu)</string>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background: transparent; color: #a0a0a0;</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

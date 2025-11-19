@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1280</width>
+    <height>720</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>English Dictionary Pro+ 2025</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <widget class="QWidget" name="tabSearch">
+       <attribute name="title">
+        <string>Tra từ nhanh</string>
+       </attribute>
+       <layout class="QVBoxLayout">
+        <item>
+         <layout class="QHBoxLayout">
+          <item>
+           <widget class="QLineEdit" name="searchEdit">
+            <property name="placeholderText">
+             <string>Nhập từ tiếng Anh hoặc Việt...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="searchButton">
+            <property name="text">
+             <string>Tìm</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QListWidget" name="resultList"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tabTopic">
+       <attribute name="title">
+        <string>Chủ đề từ vựng</string>
+       </attribute>
+       <layout class="QHBoxLayout">
+        <item>
+         <widget class="QListWidget" name="topicList">
+          <property name="maximumWidth">
+           <number>300</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QListWidget" name="wordList"/>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="groupBox">
+          <property name="title">
+           <string>Chi tiết từ</string>
+          </property>
+          <layout class="QVBoxLayout">
+           <item>
+            <widget class="QLabel" name="detailEnglish"/>
+           </item>
+           <item>
+            <widget class="QLabel" name="detailViet"/>
+           </item>
+           <item>
+            <widget class="QLabel" name="detailIPA"/>
+           </item>
+           <item>
+            <widget class="QLabel" name="detailExample"/>
+           </item>
+           <item>
+            <widget class="QLabel" name="detailTopic"/>
+           </item>
+           <item>
+            <layout class="QHBoxLayout">
+             <item>
+              <widget class="QPushButton" name="btnPlay">
+               <property name="text">
+                <string>Phát âm</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btnRepeat">
+               <property name="text">
+                <string>Lặp lại</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btnSave">
+               <property name="text">
+                <string>Lưu từ</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <!-- TAB HỌC 12 THÌ -->
+      <widget class="QWidget" name="tabGrammar">
+       <attribute name="title">
+        <string>Học 12 thì</string>
+       </attribute>
+       <layout class="QHBoxLayout">
+        <item>
+         <widget class="QListWidget" name="listTenses">
+          <property name="maximumWidth">
+           <number>350</number>
+          </property>
+          <item>
+           <property name="text">
+            <string>1. Present Simple</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2. Present Continuous</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>3. Present Perfect</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>4. Present Perfect Continuous</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>5. Past Simple</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>6. Past Continuous</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>7. Past Perfect</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>8. Past Perfect Continuous</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>9. Future Simple</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>10. Future Continuous</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>11. Future Perfect</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>12. Future Perfect Continuous</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTextEdit" name="textGrammarDetail">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="html">
+           <string>&lt;h2 style="color:#4facfe"&gt;Chọn một thì để học&lt;/h2&gt;&lt;p style="font-size:20px"&gt;Click vào danh sách bên trái để xem chi tiết!&lt;/p&gt;</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <!-- TAB ÔN TẬP GRAMMAR -->
+      <widget class="QWidget" name="tabPracticeGrammar">
+       <attribute name="title">
+        <string>Ôn tập Grammar</string>
+       </attribute>
+       <layout class="QVBoxLayout">
+        <item alignment="Qt::AlignCenter">
+         <widget class="QPushButton" name="btnStartGrammarPractice">
+          <property name="text">
+           <string>BẮT ĐẦU ÔN TẬP TỔNG HỢP</string>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>600</width>
+            <height>120</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>28</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background:#ff6b6b; color:white; border-radius:40px; padding:30px;</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+    <!-- 3 NÚT MỚI -->
+    <item>
+     <layout class="QHBoxLayout">
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnShowSaved">
+        <property name="text">
+         <string>Xem từ đã lưu</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background:#4facfe; color:white; padding:15px; font-size:18px; font-weight:bold; border-radius:15px;</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnReviewSaved">
+        <property name="text">
+         <string>Ôn tập từ đã lưu</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background:#00ff9d; color:white; padding:15px; font-size:18px; font-weight:bold; border-radius:15px;</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnDeleteSaved">
+        <property name="text">
+         <string>Xóa từ đã lưu</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background:#ff6b6b; color:white; padding:15px; font-size:18px; font-weight:bold; border-radius:15px;</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
