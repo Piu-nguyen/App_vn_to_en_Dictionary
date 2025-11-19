@@ -211,14 +211,9 @@ struct Word {
 // ==============================
 // BST Dictionary
 // ==============================
-// ==============================
-// Thay thế struct Node cũ bằng cái này (có union)
-// ==============================
 struct Node {
     Word data;
     Node *left = nullptr, *right = nullptr;
-
-    // THÊM UNION Ở ĐÂY - tiết kiệm bộ nhớ khi so sánh key
     enum class KeyMode { Eng, Vie } mode;
     union {
         struct { char eng_key[64]; };     // chỉ dùng khi mode == Eng
@@ -236,7 +231,7 @@ struct Node {
     }
 };
 // ==============================
-// Thay toàn bộ class Dictionary bằng cái này (chỉ sửa phần insert/find/suggest)
+// class Dictionary
 // ==============================
 class Dictionary {
 protected:
