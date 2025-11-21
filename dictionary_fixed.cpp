@@ -285,30 +285,46 @@ protected: //Phạm vi truy cập của các thành viên bên trong lớp
     void suggest(Node* node, const string& prefix, bool eng, vector<string>& res, int limit) {  
         // gợi ý từ dựa trên tiền tố
         if (!node || (int)res.size() >= limit) return;  // nếu node trống hoặc đủ gợi ý thì dừng
-
-        string word = eng ? node->data.english : node->data.vietnamese;  // lấy từ hiện tại
-        if (normalize(word).find(normalize(prefix)) != string::npos)  // nếu từ chứa tiền tố
+        //Nếu rỗng hoặc đã đủ số gợi ý, thoát hàm
+        string word = eng ? node->data.english : node->data.vietnamese;  
+        // lấy từ hiện tại
+        if (normalize(word).find(normalize(prefix)) != string::npos) 
+         // nếu từ chứa tiền tố
             res.push_back(word);  // thêm vào kết quả
 
         suggest(node->left, prefix, eng, res, limit);  // gợi ý bên trái
         suggest(node->right, prefix, eng, res, limit);  // gợi ý bên phải
     }
 
-    void clear(Node* n) { if (n) { clear(n->left); clear(n->right); delete n; } }  // giải phóng bộ nhớ
+    void clear(Node* n) { if (n) { clear(n->left); clear(n->right); delete n; } } 
+     // giải phóng bộ nhớ
 
 public:
-    ~Dictionary() { clear(rootEng); clear(rootVie); }  // hủy hai cây BST khi hủy đối tượng
+    ~Dictionary() { clear(rootEng); clear(rootVie); }  
+    // hủy hai cây BST khi hủy đối tượng
 
     void add(const Word& w) {  // thêm từ vào cả hai cây BST
         rootEng = insert(rootEng, w, true);   // thêm vào cây tiếng Anh
         rootVie = insert(rootVie, w, false);   // thêm vào cây tiếng Việt
     }
 
-    Word* findEng(const string& k) { return find(rootEng, k, true); }  // tìm từ tiếng Anh
-    Word* findVie(const string& k) { return find(rootVie, k, false); } // tìm từ tiếng Việt
+    Word* findEng(const string& k) {
+         return find(rootEng, k, true); 
+        }  // tìm từ tiếng Anh
+    Word* findVie(const string& k) {
+         return find(rootVie, k, false); 
+        } // tìm từ tiếng Việt
 
-    vector<string> suggestEng(const string& k) { vector<string> r; suggest(rootEng, k, true, r, 8); return r; }// gợi ý từ tiếng Anh
-    vector<string> suggestVie(const string& k) { vector<string> r; suggest(rootVie, k, false, r, 8); return r; } // gợi ý từ tiếng Việt
+    vector<string> suggestEng(const string& k) {
+         vector<string> r; 
+         suggest(rootEng, k, true, r, 8); 
+         return r; }
+    // gợi ý từ tiếng Anh
+    vector<string> suggestVie(const string& k) { 
+        vector<string> r; 
+        suggest(rootVie, k, false, r, 8); 
+        return r; } 
+    // gợi ý từ tiếng Việt
 };
 // ==============================
 // SavedWords (dùng enum)
