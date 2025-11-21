@@ -1,24 +1,24 @@
 #include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <sstream>
-#include <algorithm>
-#include <map>
+#include <fstream> //Dùng để lưu và đọc file
+#include <string>  //Dùng để xử lý chuỗi
+#include <vector>  //Dùng để lưu trữ danh sách từ và các cấu trúc dữ liệu khác
+#include <sstream>  //Dùng để chuyển đổi chuỗi
+#include <algorithm>   //Dùng để sắp xếp và tìm kiếm
+#include <map>   //Dùng để chuyển từ chữ có dấu sang không dấu
 #include <limits>
 #include <filesystem>
-#include <cctype>
+#include <cctype>   //Dùng để chuyển chữ hoa thành chữ thường
 #include <ctime>
 #include <iomanip>
 #include <random>
-#include <thread>
-#include <chrono>
+#include <thread>  //Dùng để xử lý đa luồng (phát âm lặp lại)
+#include <chrono>   //Dùng để tạm dừng giữa các lần phát âm
 #include <memory>
 #include <set>
-#include <atomic>
+#include <atomic>   //Dùng để kiểm soát luồng phát âm lặp lại
 #include <cmath>
 #ifdef _WIN32
-#include <windows.h>
+#include <windows.h>   //Dùng để thiết lập mã hóa UTF-8 và phát âm
 #include <conio.h>
 #endif
 using namespace std;
@@ -60,15 +60,15 @@ string safeInput(const string& prompt = "") {
 // ==============================
 // Utility
 // ==============================
-string trim(const string& s) {
+string trim(const string& s) { // loại bỏ khoảng trắng đầu và cuối
     size_t start = s.find_first_not_of(" \t\r\n");
     size_t end = s.find_last_not_of(" \t\r\n");
-    return (start == string::npos) ? "" : s.substr(start, end - start + 1);
+    return (start == string::npos) ? "" : s.substr(start, end - start + 1); // trả về chuỗi đã loại bỏ
 }
-bool isNumber(const string& s) {
-    return !s.empty() && all_of(s.begin(), s.end(), ::isdigit);
+bool isNumber(const string& s) {  // kiểm tra chuỗi có phải số không
+    return !s.empty() && all_of(s.begin(), s.end(), ::isdigit); // tất cả ký tự đều là chữ số
 }
-string normalize(const string& s) {
+string normalize(const string& s) { // chuyển chuỗi có dấu thành không dấu và chữ thường
     static const map<char, char> m = {
         // vietnamese lowercase
         {char(0xE0),'a'},{char(0xE1),'a'},{char(0x1EA3),'a'},{char(0xE3),'a'},{char(0x1EA1),'a'},
@@ -102,11 +102,11 @@ string normalize(const string& s) {
         {char(0x1AF),'U'},{char(0x1EEA),'U'},{char(0x1EEC),'U'},{char(0x1EEE),'U'},{char(0x1EF0),'U'},
         {char(0x1EF2),'Y'},{char(0xDD),'Y'},{char(0x1EF6),'Y'},{char(0x1EF8),'Y'},{char(0x1EF4),'Y'}
     };
-    string res;
-    for (char c : s) {
-        unsigned char uc = static_cast<unsigned char>(c);
-        auto it = m.find(uc);
-        res += (it != m.end()) ? it->second : tolower(uc);
+    string res; // kết quả
+    for (char c : s) { // duyệt từng ký tự trong chuỗi
+        unsigned char uc = static_cast<unsigned char>(c); // chuyển sang unsigned char để tìm trong map
+        auto it = m.find(uc); // tìm ký tự trong map
+        res += (it != m.end()) ? it->second : tolower(uc); // nếu tìm thấy thì thay thế, không thì chuyển thành chữ thường
     }
     return res;
 }
@@ -115,37 +115,37 @@ string normalize(const string& s) {
 // Phát âm (Windows + Linux/macOS fallback)
 // ==============================
 #ifdef _WIN32
-void speak(const string& text) {
-    string escaped;
-    for (char c : text) {
-        if (c == '"' || c == '\\') escaped += '\\';
-        escaped += c;
+void speak(const string& text) { // sử dụng PowerShell để phát âm
+    string escaped; // thoát ký tự đặc biệt
+    for (char c : text) { // duyệt từng ký tự
+        if (c == '"' || c == '\\') escaped += '\\'; // thoát dấu ngoặc kép và dấu gạch chéo ngược
+        escaped += c; // thêm ký tự vào chuỗi kết quả
     }
-    string cmd = "powershell -Command \"Add-Type -AssemblyName System.Speech; "
-                 "$synth = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
-                 "$synth.SelectVoice('Microsoft Zira Desktop'); "
-                 "$synth.Speak('" + escaped + "');\"";
+    string cmd = "powershell -Command \"Add-Type -AssemblyName System.Speech; " // thêm thư viện System.Speech
+                 "$synth = New-Object System.Speech.Synthesis.SpeechSynthesizer; "// tạo đối tượng SpeechSynthesizer
+                 "$synth.SelectVoice('Microsoft Zira Desktop'); " // chọn giọng nói
+                 "$synth.Speak('" + escaped + "');\""; // phát âm
     system(cmd.c_str());
 }
-void speakRepeat(const string& text) {
+void speakRepeat(const string& text) { // phát âm lặp lại cho đến khi người dùng nhấn Enter
     cout << "\nĐang phát lại liên tục... (Nhấn Enter để dừng)\n";
-    atomic<bool> stop{false};
-    thread t([text, &stop]() {
+    atomic<bool> stop{false};  // biến nguyên tử để kiểm soát luồng
+    thread t([text, &stop]() { // luồng phát âm
         while (!stop) {
-            speak(text);
-            std::this_thread::sleep_for(chrono::milliseconds(800));
+            speak(text); // phát âm
+            std::this_thread::sleep_for(chrono::milliseconds(800)); // tạm dừng giữa các lần phát âm
         }
     });
-    safeInput("");
-    stop = true;
-    t.join();
+    safeInput(""); // chờ người dùng nhấn Enter
+    stop = true; // đặt biến dừng thành true
+    t.join(); // chờ luồng kết thúc
 }
 #else
-void speak(const string& text) {
-    string cmd = "espeak \"" + text + "\" 2>/dev/null || say \"" + text + "\"";
-    system(cmd.c_str());
+void speak(const string& text) { // sử dụng espeak trên Linux/macOS
+    string cmd = "espeak \"" + text + "\" 2>/dev/null || say \"" + text + "\""; // thử espeak, nếu không có thì dùng say
+    system(cmd.c_str()); // thực thi lệnh
 }
-void speakRepeat(const string& text) {
+void speakRepeat(const string& text) {  // thông báo không hỗ trợ lặp lại
     cout << "\nTính năng lặp lại chỉ hỗ trợ trên Windows.\n";
     safeInput("Nhấn Enter để tiếp tục...");
 }
@@ -154,22 +154,22 @@ void speakRepeat(const string& text) {
 // ==============================
 // Lịch sử tra từ
 // ==============================
-void saveHistory(const string& word) {
-    ofstream f("history.txt", ios::app);
-    if (f.is_open()) { f << word << "\n"; f.close(); }
+void saveHistory(const string& word) { // lưu từ vào file lịch sử
+    ofstream f("history.txt", ios::app); // mở file ở chế độ thêm
+    if (f.is_open()) { f << word << "\n"; f.close(); }  // ghi từ và đóng file
 }
-vector<string> loadHistory(int limit = 10) {
-    vector<string> all, res;
-    ifstream f("history.txt");
-    if (!f.is_open()) return res;
-    string line;
-    while (getline(f, line)) {
-        line = trim(line);
-        if (!line.empty()) all.push_back(line);
+vector<string> loadHistory(int limit = 10) { // tải lịch sử tra từ, giới hạn số từ
+    vector<string> all, res; // tất cả từ và kết quả
+    ifstream f("history.txt"); // mở file lịch sử
+    if (!f.is_open()) return res;  // nếu không mở được thì trả về rỗng
+    string line;  // dòng hiện tại
+    while (getline(f, line)) {  // đọc từng dòng
+        line = trim(line);  // loại bỏ khoảng trắng
+        if (!line.empty()) all.push_back(line);  // thêm từ vào danh sách
     }
     f.close();
-    int start = max(0, (int)all.size() - limit);
-    for (int i = start; i < (int)all.size(); ++i) res.push_back(all[i]);
+    int start = max(0, (int)all.size() - limit);  // xác định vị trí bắt đầu lấy từ
+    for (int i = start; i < (int)all.size(); ++i) res.push_back(all[i]);   // thêm từ vào kết quả
     return res;
 }
 
