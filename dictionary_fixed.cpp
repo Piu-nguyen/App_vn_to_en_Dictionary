@@ -5,7 +5,7 @@
 #include <sstream>  //Dùng để chuyển đổi chuỗi
 #include <algorithm>   //Dùng để sắp xếp và tìm kiếm
 #include <map>   //Dùng để chuyển từ chữ có dấu sang không dấu
-#include <limits> //
+#include <limits> 
 #include <filesystem>
 #include <cctype>   //Dùng để chuyển chữ hoa thành chữ thường
 #include <ctime>
@@ -69,7 +69,7 @@ bool isNumber(const string& s) {  // kiểm tra chuỗi có phải số không
     return !s.empty() && all_of(s.begin(), s.end(), ::isdigit); // tất cả ký tự đều là chữ số
 }
 string normalize(const string& s) { // chuyển chuỗi có dấu thành không dấu và chữ thường
-    static const map<char, char> m = {
+    static const map<char, char> m = { // bản đồ chuyển đổi ký tự có dấu sang không dấu
         // vietnamese lowercase
         {char(0xE0),'a'},{char(0xE1),'a'},{char(0x1EA3),'a'},{char(0xE3),'a'},{char(0x1EA1),'a'},
         {char(0x103),'a'},{char(0x1EAF),'a'},{char(0x1EB1),'a'},{char(0x1EB3),'a'},{char(0x1EB5),'a'},{char(0x1EB7),'a'},
@@ -167,7 +167,7 @@ vector<string> loadHistory(int limit = 10) { // tải lịch sử tra từ, gi�
         line = trim(line);  // loại bỏ khoảng trắng
         if (!line.empty()) all.push_back(line);  // thêm từ vào danh sách
     }
-    f.close();
+    f.close(); // đóng file
     int start = max(0, (int)all.size() - limit);  // xác định vị trí bắt đầu lấy từ
     for (int i = start; i < (int)all.size(); ++i) res.push_back(all[i]);   // thêm từ vào kết quả
     return res;
@@ -197,7 +197,7 @@ struct Word {
         if (level < 10) return LearnStage::Advanced;  // cấp độ 6-9
         return LearnStage::Mastered;  // cấp độ 10
     }
-    string stageName() const {
+    string stageName() const { // lấy tên trạng thái học tập dưới dạng chuỗi
         switch (getStage()) {
             case LearnStage::NotLearned: return "Chưa học";  // chưa học
             case LearnStage::Basic: return "Cơ bản";  // cấp độ 1-5
