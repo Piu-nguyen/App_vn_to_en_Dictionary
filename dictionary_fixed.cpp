@@ -188,7 +188,7 @@ struct Word {
         : english(e), vietnamese(v), ipaText(ipaTxt), example(ex), topic(t) {} // khởi tạo các thuộc tính
     int expToNextLevel() const { // tính điểm kinh nghiệm cần để lên cấp độ tiếp theo
         if (level >= 10) return 0; // đã đạt cấp độ tối đa
-        if (level < 5) return 100;  // cấp độ 1-4 cần 100 EXP
+        if (level < 5) return 100;  //cần 100 EXP cho cấp độ 1-4
         return static_cast<int>(100 * pow(1.2, level - 4)); // cấp độ 5-9 cần EXP tăng dần
     } 
     LearnStage getStage() const {  // lấy trạng thái học tập dựa trên cấp độ
@@ -212,7 +212,7 @@ struct Word {
 // BST Dictionary
 // ==============================
 struct Node {
-    Word data;
+    Word data; // từ
     Node *left = nullptr, *right = nullptr;
     enum class KeyMode { Eng, Vie } mode;
     union {
@@ -234,32 +234,47 @@ struct Node {
 // class Dictionary
 // ==============================
 class Dictionary {
-protected:
-    Node *rootEng = nullptr, *rootVie = nullptr;  // gốc của hai cây BST
+protected: //Phạm vi truy cập của các thành viên bên trong lớp
+//chỉ có thể được truy cập bởi các lớp kế thừa và các hàm thành viên của lớp đó.
+    Node *rootEng = nullptr, *rootVie = nullptr;  //Khai báo hai con trỏ đến nút gốc của hai cây BST
 
     Node* insert(Node* node, const Word& w, bool eng) {   // chèn từ vào cây BST
-        if (!node) return new Node(w, eng ? Node::KeyMode::Eng : Node::KeyMode::Vie);   // nếu node trống thì tạo node mới
+        if (!node) return new Node(w, eng ? Node::KeyMode::Eng : Node::KeyMode::Vie);  
+         // nếu node trống thì tạo node mới
+         //gọi constructor Node với từ w và chế độ khóa (tiếng Anh hoặc tiếng Việt)
 
         string current_key = eng ?    // lấy khóa hiện tại
-            string(node->mode == Node::KeyMode::Eng ? node->eng_key : "") :  // nếu là tiếng Anh
-            string(node->mode == Node::KeyMode::Vie ? node->vie_key : "");   // nếu là tiếng Việt
+            string(node->mode == Node::KeyMode::Eng ? node->eng_key : "") :  
+            // nếu chèn theo tiếng Anh
+            //Lấy khóa tiếng Anh từ node nếu chế độ là Eng, ngược lại trả về chuỗi rỗng
+            string(node->mode == Node::KeyMode::Vie ? node->vie_key : "");   
+            // nếu chèn theo tiếng Việt
+            //Lấy khóa tiếng Việt từ node nếu chế độ là Vie, ngược lại trả về chuỗi rỗng
 
-        string new_key = eng ? w.english : w.vietnamese;  // lấy khóa mới
+        string new_key = eng ? w.english : w.vietnamese; 
+         // lấy khóa mới
+         //Nếu eng là true, lấy khóa tiếng Anh từ từ w, ngược lại lấy khóa tiếng Việt
 
         if (normalize(new_key) < normalize(current_key))  // so sánh khóa
             node->left = insert(node->left, w, eng);   // chèn vào bên trái
         else if (normalize(new_key) > normalize(current_key))  // nếu khóa mới lớn hơn
             node->right = insert(node->right, w, eng);  // chèn vào bên phải
 
-        return node;
+        return node; // trả về node hiện tại
     }
 
-    Word* find(Node* node, const string& key, bool eng) {  // tìm từ trong cây BST
-        if (!node) return nullptr;  //
+    Word* find(Node* node, const string& key, bool eng) {  
+        // tìm từ trong cây BST
+        if (!node) return nullptr;  
+        // nếu node trống thì trả về nullptr
 
         string node_key = eng ?  // lấy khóa của node hiện tại
-            (node->mode == Node::KeyMode::Eng ? string(node->eng_key) : node->data.english) :  // nếu là tiếng Anh
-            (node->mode == Node::KeyMode::Vie ? string(node->vie_key) : node->data.vietnamese);  // nếu là tiếng Việt
+            (node->mode == Node::KeyMode::Eng ? string(node->eng_key) : node->data.english) : 
+             // nếu là tiếng Anh
+             //Lấy khóa tiếng Anh từ node nếu chế độ là Eng, ngược lại lấy từ tiếng Anh trong dữ liệu
+            (node->mode == Node::KeyMode::Vie ? string(node->vie_key) : node->data.vietnamese);  
+            // nếu là tiếng Việt
+            //Lấy khóa tiếng Việt từ node nếu chế độ là Vie, ngược lại lấy từ tiếng Việt trong dữ liệu
 
         if (normalize(key) == normalize(node_key)) return &node->data;  // nếu tìm thấy thì trả về con trỏ đến từ
         if (normalize(key) < normalize(node_key))  // nếu khóa cần tìm nhỏ hơn
@@ -267,7 +282,8 @@ protected:
         return find(node->right, key, eng);  // tìm bên phải
     }
 
-    void suggest(Node* node, const string& prefix, bool eng, vector<string>& res, int limit) {  // gợi ý từ dựa trên tiền tố
+    void suggest(Node* node, const string& prefix, bool eng, vector<string>& res, int limit) {  
+        // gợi ý từ dựa trên tiền tố
         if (!node || (int)res.size() >= limit) return;  // nếu node trống hoặc đủ gợi ý thì dừng
 
         string word = eng ? node->data.english : node->data.vietnamese;  // lấy từ hiện tại
