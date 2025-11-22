@@ -1,24 +1,24 @@
 #include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <sstream>
-#include <algorithm>
-#include <map>
-#include <limits>
+#include <fstream> //Dùng để lưu và đọc file
+#include <string>  //Dùng để xử lý chuỗi
+#include <vector>  //Dùng để lưu trữ danh sách từ và các cấu trúc dữ liệu khác
+#include <sstream>  //Dùng để chuyển đổi chuỗi
+#include <algorithm>   //Dùng để sắp xếp và tìm kiếm
+#include <map>   //Dùng để chuyển từ chữ có dấu sang không dấu
+#include <limits> 
 #include <filesystem>
-#include <cctype>
+#include <cctype>   //Dùng để chuyển chữ hoa thành chữ thường
 #include <ctime>
 #include <iomanip>
 #include <random>
-#include <thread>
-#include <chrono>
+#include <thread>  //Dùng để xử lý đa luồng (phát âm lặp lại)
+#include <chrono>   //Dùng để tạm dừng giữa các lần phát âm
 #include <memory>
 #include <set>
-#include <atomic>
+#include <atomic>   //Dùng để kiểm soát luồng phát âm lặp lại
 #include <cmath>
 #ifdef _WIN32
-#include <windows.h>
+#include <windows.h>   //Dùng để thiết lập mã hóa UTF-8 và phát âm
 #include <conio.h>
 #endif
 using namespace std;
@@ -39,37 +39,37 @@ enum class LearnStage : int {
 // ==============================
 void enableUTF8() {
 #ifdef _WIN32
-    SetConsoleCP(65001);
-    SetConsoleOutputCP(65001);
-    system("chcp 65001 > nul");
+    SetConsoleCP(65001); // Thiết lập mã hóa đầu vào UTF-8
+    SetConsoleOutputCP(65001);   // Thiết lập mã hóa đầu ra UTF-8
+    system("chcp 65001 > nul");  // Đặt mã trang console sang UTF-8
 #endif
 }
-string safeInput(const string& prompt = "") {
-    string line;
-    cout << prompt;
-    cout.flush();
-    if (!getline(cin, line)) {
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+string safeInput(const string& prompt = "") {   // nhập chuỗi an toàn
+    string line;   // dòng nhập
+    cout << prompt;   // hiển thị lời nhắc
+    cout.flush();   // đảm bảo in ra ngay lập tức
+    if (!getline(cin, line)) {   // đọc dòng nhập
+        cin.clear();   // xóa trạng thái lỗi
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // bỏ qua dòng lỗi
         return "";
     }
-    if (!line.empty() && line.back() == '\r') line.pop_back();
+    if (!line.empty() && line.back() == '\r') line.pop_back();  // loại bỏ ký tự carriage return nếu có (Windows)
     return line;
 }
 
 // ==============================
 // Utility
 // ==============================
-string trim(const string& s) {
+string trim(const string& s) { // loại bỏ khoảng trắng đầu và cuối
     size_t start = s.find_first_not_of(" \t\r\n");
     size_t end = s.find_last_not_of(" \t\r\n");
-    return (start == string::npos) ? "" : s.substr(start, end - start + 1);
+    return (start == string::npos) ? "" : s.substr(start, end - start + 1); // trả về chuỗi đã loại bỏ
 }
-bool isNumber(const string& s) {
-    return !s.empty() && all_of(s.begin(), s.end(), ::isdigit);
+bool isNumber(const string& s) {  // kiểm tra chuỗi có phải số không
+    return !s.empty() && all_of(s.begin(), s.end(), ::isdigit); // tất cả ký tự đều là chữ số
 }
-string normalize(const string& s) {
-    static const map<char, char> m = {
+string normalize(const string& s) { // chuyển chuỗi có dấu thành không dấu và chữ thường
+    static const map<char, char> m = { // bản đồ chuyển đổi ký tự có dấu sang không dấu
         // vietnamese lowercase
         {char(0xE0),'a'},{char(0xE1),'a'},{char(0x1EA3),'a'},{char(0xE3),'a'},{char(0x1EA1),'a'},
         {char(0x103),'a'},{char(0x1EAF),'a'},{char(0x1EB1),'a'},{char(0x1EB3),'a'},{char(0x1EB5),'a'},{char(0x1EB7),'a'},
@@ -102,11 +102,11 @@ string normalize(const string& s) {
         {char(0x1AF),'U'},{char(0x1EEA),'U'},{char(0x1EEC),'U'},{char(0x1EEE),'U'},{char(0x1EF0),'U'},
         {char(0x1EF2),'Y'},{char(0xDD),'Y'},{char(0x1EF6),'Y'},{char(0x1EF8),'Y'},{char(0x1EF4),'Y'}
     };
-    string res;
-    for (char c : s) {
-        unsigned char uc = static_cast<unsigned char>(c);
-        auto it = m.find(uc);
-        res += (it != m.end()) ? it->second : tolower(uc);
+    string res; // kết quả
+    for (char c : s) { // duyệt từng ký tự trong chuỗi
+        unsigned char uc = static_cast<unsigned char>(c); // chuyển sang unsigned char để tìm trong map
+        auto it = m.find(uc); // tìm ký tự trong map
+        res += (it != m.end()) ? it->second : tolower(uc); // nếu tìm thấy thì thay thế, không thì chuyển thành chữ thường
     }
     return res;
 }
@@ -115,37 +115,37 @@ string normalize(const string& s) {
 // Phát âm (Windows + Linux/macOS fallback)
 // ==============================
 #ifdef _WIN32
-void speak(const string& text) {
-    string escaped;
-    for (char c : text) {
-        if (c == '"' || c == '\\') escaped += '\\';
-        escaped += c;
+void speak(const string& text) { // sử dụng PowerShell để phát âm
+    string escaped; // thoát ký tự đặc biệt
+    for (char c : text) { // duyệt từng ký tự
+        if (c == '"' || c == '\\') escaped += '\\'; // thoát dấu ngoặc kép và dấu gạch chéo ngược
+        escaped += c; // thêm ký tự vào chuỗi kết quả
     }
-    string cmd = "powershell -Command \"Add-Type -AssemblyName System.Speech; "
-                 "$synth = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
-                 "$synth.SelectVoice('Microsoft Zira Desktop'); "
-                 "$synth.Speak('" + escaped + "');\"";
+    string cmd = "powershell -Command \"Add-Type -AssemblyName System.Speech; " // thêm thư viện System.Speech
+                 "$synth = New-Object System.Speech.Synthesis.SpeechSynthesizer; "// tạo đối tượng SpeechSynthesizer
+                 "$synth.SelectVoice('Microsoft Zira Desktop'); " // chọn giọng nói
+                 "$synth.Speak('" + escaped + "');\""; // phát âm
     system(cmd.c_str());
 }
-void speakRepeat(const string& text) {
+void speakRepeat(const string& text) { // phát âm lặp lại cho đến khi người dùng nhấn Enter
     cout << "\nĐang phát lại liên tục... (Nhấn Enter để dừng)\n";
-    atomic<bool> stop{false};
-    thread t([text, &stop]() {
+    atomic<bool> stop{false};  // biến nguyên tử để kiểm soát luồng
+    thread t([text, &stop]() { // luồng phát âm
         while (!stop) {
-            speak(text);
-            std::this_thread::sleep_for(chrono::milliseconds(800));
+            speak(text); // phát âm
+            std::this_thread::sleep_for(chrono::milliseconds(800)); // tạm dừng giữa các lần phát âm
         }
     });
-    safeInput("");
-    stop = true;
-    t.join();
+    safeInput(""); // chờ người dùng nhấn Enter
+    stop = true; // đặt biến dừng thành true
+    t.join(); // chờ luồng kết thúc
 }
 #else
-void speak(const string& text) {
-    string cmd = "espeak \"" + text + "\" 2>/dev/null || say \"" + text + "\"";
-    system(cmd.c_str());
+void speak(const string& text) { // sử dụng espeak trên Linux/macOS
+    string cmd = "espeak \"" + text + "\" 2>/dev/null || say \"" + text + "\""; // thử espeak, nếu không có thì dùng say
+    system(cmd.c_str()); // thực thi lệnh
 }
-void speakRepeat(const string& text) {
+void speakRepeat(const string& text) {  // thông báo không hỗ trợ lặp lại
     cout << "\nTính năng lặp lại chỉ hỗ trợ trên Windows.\n";
     safeInput("Nhấn Enter để tiếp tục...");
 }
@@ -154,22 +154,22 @@ void speakRepeat(const string& text) {
 // ==============================
 // Lịch sử tra từ
 // ==============================
-void saveHistory(const string& word) {
-    ofstream f("history.txt", ios::app);
-    if (f.is_open()) { f << word << "\n"; f.close(); }
+void saveHistory(const string& word) { // lưu từ vào file lịch sử
+    ofstream f("history.txt", ios::app); // mở file ở chế độ thêm
+    if (f.is_open()) { f << word << "\n"; f.close(); }  // ghi từ và đóng file
 }
-vector<string> loadHistory(int limit = 10) {
-    vector<string> all, res;
-    ifstream f("history.txt");
-    if (!f.is_open()) return res;
-    string line;
-    while (getline(f, line)) {
-        line = trim(line);
-        if (!line.empty()) all.push_back(line);
+vector<string> loadHistory(int limit = 10) { // tải lịch sử tra từ, giới hạn số từ
+    vector<string> all, res; // tất cả từ và kết quả
+    ifstream f("history.txt"); // mở file lịch sử
+    if (!f.is_open()) return res;  // nếu không mở được thì trả về rỗng
+    string line;  // dòng hiện tại
+    while (getline(f, line)) {  // đọc từng dòng
+        line = trim(line);  // loại bỏ khoảng trắng
+        if (!line.empty()) all.push_back(line);  // thêm từ vào danh sách
     }
-    f.close();
-    int start = max(0, (int)all.size() - limit);
-    for (int i = start; i < (int)all.size(); ++i) res.push_back(all[i]);
+    f.close(); // đóng file
+    int start = max(0, (int)all.size() - limit);  // xác định vị trí bắt đầu lấy từ
+    for (int i = start; i < (int)all.size(); ++i) res.push_back(all[i]);   // thêm từ vào kết quả
     return res;
 }
 
@@ -177,32 +177,32 @@ vector<string> loadHistory(int limit = 10) {
 // Word (với enum)
 // ==============================
 struct Word {
-    string english, vietnamese, ipaText, example, topic;
-    bool learned = false;
-    int exp = 0;
-    int level = 0;
-    bool isNew = true;
-    bool isMastered = false;
-    Word() = default;
-    Word(const string& e, const string& v, const string& ipaTxt, const string& ex, const string& t = "")
-        : english(e), vietnamese(v), ipaText(ipaTxt), example(ex), topic(t) {}
-    int expToNextLevel() const {
-        if (level >= 10) return 0;
-        if (level < 5) return 100;
-        return static_cast<int>(100 * pow(1.2, level - 4));
+    string english, vietnamese, ipaText, example, topic; // thông tin từ
+    bool learned = false; // đã học
+    int exp = 0; // điểm kinh nghiệm
+    int level = 0;  // cấp độ học
+    bool isNew = true;  // từ mới
+    bool isMastered = false;  // đã thông thạo
+    Word() = default;  // constructor mặc định
+    Word(const string& e, const string& v, const string& ipaTxt, const string& ex, const string& t = "") // constructor với tham số
+        : english(e), vietnamese(v), ipaText(ipaTxt), example(ex), topic(t) {} // khởi tạo các thuộc tính
+    int expToNextLevel() const { // tính điểm kinh nghiệm cần để lên cấp độ tiếp theo
+        if (level >= 10) return 0; // đã đạt cấp độ tối đa
+        if (level < 5) return 100;  //cần 100 EXP cho cấp độ 1-4
+        return static_cast<int>(100 * pow(1.2, level - 4)); // cấp độ 5-9 cần EXP tăng dần
+    } 
+    LearnStage getStage() const {  // lấy trạng thái học tập dựa trên cấp độ
+        if (level == 0) return LearnStage::NotLearned; // chưa học
+        if (level <= 5) return LearnStage::Basic;  // cấp độ 1-5
+        if (level < 10) return LearnStage::Advanced;  // cấp độ 6-9
+        return LearnStage::Mastered;  // cấp độ 10
     }
-    LearnStage getStage() const {
-        if (level == 0) return LearnStage::NotLearned;
-        if (level <= 5) return LearnStage::Basic;
-        if (level < 10) return LearnStage::Advanced;
-        return LearnStage::Mastered;
-    }
-    string stageName() const {
+    string stageName() const { // lấy tên trạng thái học tập dưới dạng chuỗi
         switch (getStage()) {
-            case LearnStage::NotLearned: return "Chưa học";
-            case LearnStage::Basic: return "Cơ bản";
-            case LearnStage::Advanced: return "Nâng cao";
-            case LearnStage::Mastered: return "Thông thạo";
+            case LearnStage::NotLearned: return "Chưa học";  // chưa học
+            case LearnStage::Basic: return "Cơ bản";  // cấp độ 1-5
+            case LearnStage::Advanced: return "Nâng cao";  // cấp độ 6-9
+            case LearnStage::Mastered: return "Thông thạo";  // cấp độ 10
         }
         return "";
     }
@@ -211,291 +211,677 @@ struct Word {
 // ==============================
 // BST Dictionary
 // ==============================
-struct Node { Word data; Node *left = nullptr, *right = nullptr; Node(const Word& w) : data(w) {} };
-class Dictionary {
-protected:
-    Node *rootEng = nullptr, *rootVie = nullptr;
-    Node* insert(Node* node, const Word& w, bool eng) {
-        if (!node) return new Node(w);
-        string k1 = normalize(eng ? w.english : w.vietnamese);
-        string k2 = normalize(eng ? node->data.english : node->data.vietnamese);
-        if (k1 < k2) node->left = insert(node->left, w, eng);
-        else if (k1 > k2) node->right = insert(node->right, w, eng);
-        return node;
-    }
-    Word* find(Node* node, const string& key, bool eng) {
-        if (!node) return nullptr;
-        string k = normalize(eng ? node->data.english : node->data.vietnamese);
-        if (key == k) return &node->data;
-        return (key < k) ? find(node->left, key, eng) : find(node->right, key, eng);
-    }
-    void suggest(Node* node, const string& key, bool eng, vector<string>& res, int limit) {
-        if (!node || (int)res.size() >= limit) return;
-        string w = normalize(eng ? node->data.english : node->data.vietnamese);
-        if (w.find(key) != string::npos) res.push_back(eng ? node->data.english : node->data.vietnamese);
-        suggest(node->left, key, eng, res, limit);
-        suggest(node->right, key, eng, res, limit);
-    }
-    void clear(Node* n) { if (n) { clear(n->left); clear(n->right); delete n; } }
-public:
-    ~Dictionary() { clear(rootEng); clear(rootVie); }
-    void add(const Word& w) { rootEng = insert(rootEng, w, true); rootVie = insert(rootVie, w, false); }
-    Word* findEng(const string& k) { return find(rootEng, normalize(k), true); }
-    Word* findVie(const string& k) { return find(rootVie, normalize(k), false); }
-    vector<string> suggestEng(const string& k) { vector<string> r; suggest(rootEng, normalize(k), true, r, 8); return r; }
-    vector<string> suggestVie(const string& k) { vector<string> r; suggest(rootVie, normalize(k), false, r, 8); return r; }
-};
+struct Node {
+    Word data; // từ
+    Node *left = nullptr, *right = nullptr;
+    enum class KeyMode { Eng, Vie } mode;
+    union {
+        struct { char eng_key[64]; };     // chỉ dùng khi mode == Eng
+        struct { char vie_key[96]; };     // chỉ dùng khi mode == Vie
+    };
 
+    Node(const Word& w, KeyMode m) : data(w), mode(m) {
+        if (mode == KeyMode::Eng) {
+            strncpy(eng_key, w.english.c_str(), sizeof(eng_key)-1);
+            eng_key[sizeof(eng_key)-1] = '\0';
+        } else {
+        strncpy(vie_key, w.vietnamese.c_str(), sizeof(vie_key)-1);
+            vie_key[sizeof(vie_key)-1] = '\0';
+        }
+    }
+};
+// ==============================
+// class Dictionary
+// ==============================
+class Dictionary {
+protected: //Phạm vi truy cập của các thành viên bên trong lớp
+//chỉ có thể được truy cập bởi các lớp kế thừa và các hàm thành viên của lớp đó.
+    Node *rootEng = nullptr, *rootVie = nullptr;  //Khai báo hai con trỏ đến nút gốc của hai cây BST
+
+    Node* insert(Node* node, const Word& w, bool eng) {   // chèn từ vào cây BST
+        if (!node) return new Node(w, eng ? Node::KeyMode::Eng : Node::KeyMode::Vie);  
+         // nếu node trống thì tạo node mới
+         //gọi constructor Node với từ w và chế độ khóa (tiếng Anh hoặc tiếng Việt)
+
+        string current_key = eng ?    // lấy khóa hiện tại
+            string(node->mode == Node::KeyMode::Eng ? node->eng_key : "") :  
+            // nếu chèn theo tiếng Anh
+            //Lấy khóa tiếng Anh từ node nếu chế độ là Eng, ngược lại trả về chuỗi rỗng
+            string(node->mode == Node::KeyMode::Vie ? node->vie_key : "");   
+            // nếu chèn theo tiếng Việt
+            //Lấy khóa tiếng Việt từ node nếu chế độ là Vie, ngược lại trả về chuỗi rỗng
+
+        string new_key = eng ? w.english : w.vietnamese; 
+         // lấy khóa mới
+         //Nếu eng là true, lấy khóa tiếng Anh từ từ w, ngược lại lấy khóa tiếng Việt
+
+        if (normalize(new_key) < normalize(current_key))  // so sánh khóa
+            node->left = insert(node->left, w, eng);   // chèn vào bên trái
+        else if (normalize(new_key) > normalize(current_key))  // nếu khóa mới lớn hơn
+            node->right = insert(node->right, w, eng);  // chèn vào bên phải
+
+        return node; // trả về node hiện tại
+    }
+
+    Word* find(Node* node, const string& key, bool eng) {  
+        // tìm từ trong cây BST
+        if (!node) return nullptr;  
+        // nếu node trống thì trả về nullptr
+
+        string node_key = eng ?  // lấy khóa của node hiện tại
+            (node->mode == Node::KeyMode::Eng ? string(node->eng_key) : node->data.english) : 
+             // nếu là tiếng Anh
+             //Lấy khóa tiếng Anh từ node nếu chế độ là Eng, ngược lại lấy từ tiếng Anh trong dữ liệu
+            (node->mode == Node::KeyMode::Vie ? string(node->vie_key) : node->data.vietnamese);  
+            // nếu là tiếng Việt
+            //Lấy khóa tiếng Việt từ node nếu chế độ là Vie, ngược lại lấy từ tiếng Việt trong dữ liệu
+
+        if (normalize(key) == normalize(node_key)) return &node->data;  // nếu tìm thấy thì trả về con trỏ đến từ
+        if (normalize(key) < normalize(node_key))  // nếu khóa cần tìm nhỏ hơn
+            return find(node->left, key, eng);  // tìm bên trái
+        return find(node->right, key, eng);  // tìm bên phải
+    }
+
+    void suggest(Node* node, const string& prefix, bool eng, vector<string>& res, int limit) {  
+        // gợi ý từ dựa trên tiền tố
+        if (!node || (int)res.size() >= limit) return;  // nếu node trống hoặc đủ gợi ý thì dừng
+        //Nếu rỗng hoặc đã đủ số gợi ý, thoát hàm
+        string word = eng ? node->data.english : node->data.vietnamese;  
+        // lấy từ hiện tại
+        if (normalize(word).find(normalize(prefix)) != string::npos) 
+         // nếu từ chứa tiền tố
+            res.push_back(word);  // thêm vào kết quả
+
+        suggest(node->left, prefix, eng, res, limit);  // gợi ý bên trái
+        suggest(node->right, prefix, eng, res, limit);  // gợi ý bên phải
+    }
+
+    void clear(Node* n) { if (n) { clear(n->left); clear(n->right); delete n; } } 
+     // giải phóng bộ nhớ
+
+public:
+    ~Dictionary() { clear(rootEng); clear(rootVie); }  
+    // hủy hai cây BST khi hủy đối tượng
+
+    void add(const Word& w) {  // thêm từ vào cả hai cây BST
+        rootEng = insert(rootEng, w, true);   // thêm vào cây tiếng Anh
+        rootVie = insert(rootVie, w, false);   // thêm vào cây tiếng Việt
+    }
+
+    Word* findEng(const string& k) {
+         return find(rootEng, k, true); 
+        }  // tìm từ tiếng Anh
+    Word* findVie(const string& k) {
+         return find(rootVie, k, false); 
+        } // tìm từ tiếng Việt
+
+    vector<string> suggestEng(const string& k) {
+         vector<string> r; 
+         suggest(rootEng, k, true, r, 8); 
+         return r; }
+    // gợi ý từ tiếng Anh
+    vector<string> suggestVie(const string& k) { 
+        vector<string> r; 
+        suggest(rootVie, k, false, r, 8); 
+        return r; } 
+    // gợi ý từ tiếng Việt
+};
 // ==============================
 // SavedWords (dùng enum)
 // ==============================
+// ==============================
+// CLASS SAVEDWORDS - QUẢN LÝ TỪ ĐÃ LƯU CỦA USER
+// Kế thừa từ Dictionary để sử dụng BST (Binary Search Tree) tra từ nhanh
+// ==============================
 class SavedWords : public Dictionary {
-private:
-    string username;
-    vector<Word> words;
-    string saveFile;
-    string masteredFile;
-    void saveToFile() const {
-        ofstream f(saveFile);
-        if (!f) return;
-        for (const auto& w : words)
-            f << w.english << "|" << w.vietnamese << "|" << w.ipaText << "|" << w.example << "|"
-              << w.exp << "|" << (w.isNew ? "1" : "0") << "|" << w.topic << "|"
-              << (w.learned ? "1" : "0") << "|" << w.level << "|" << (w.isMastered ? "1" : "0") << "\n";
-    }
-    void saveMastered() const {
-        ofstream f(masteredFile);
-        if (!f) return;
-        for (const auto& w : words)
-            if (w.isMastered)
-                f << w.english << "|" << w.vietnamese << "|" << w.topic << "\n";
-    }
-    void loadFromFile() {
-        words.clear();
-        clear(rootEng); clear(rootVie); rootEng = rootVie = nullptr;
-        ifstream f(saveFile);
-        if (!f) return;
-        string line;
-        while (getline(f, line)) {
-            stringstream ss(line);
-            vector<string> parts;
-            string part;
-            while (getline(ss, part, '|')) parts.push_back(trim(part));
-            if (parts.size() < 10) continue;
-            Word w(parts[0], parts[1], parts[2], parts[3], parts[6]);
-            try { w.exp = stoi(parts[4]); } catch(...) { w.exp = 0; }
-            w.isNew = (parts[5] == "1");
-            w.learned = (parts[7] == "1");
-            try { w.level = stoi(parts[8]); } catch(...) { w.level = 0; }
-            w.isMastered = (parts[9] == "1");
-            if (w.level >= 10) w.isMastered = true;
-            words.push_back(w);
+    private:
+        string username;           // Tên user (để biết file nào là của ai)
+        vector<Word> words;        // Danh sách TẤT CẢ từ đã lưu của user
+        string saveFile;           // Tên file lưu từ: "username_words.txt"
+        string masteredFile;       // Tên file lưu từ đã thông thạo: "username_mastered.txt"
+
+        // ===== PHƯƠNG THỨC LƯU FILE =====
+        void saveToFile() const {
+            // Mở file ở chế độ ghi đè (xóa nội dung cũ)
+            ofstream f(saveFile);
+            if (!f) return;  // Nếu không mở được file thì return
+            
+            // Ghi TỪNG từ vào file, mỗi từ 1 dòng
+            // Format: english|vietnamese|IPA|example|exp|isNew|topic|learned|level|isMastered
+            for (const auto& w : words) { //duyệt toàn bộ danh sách word
+                f << w.english << "|"           // Từ tiếng Anh
+                << w.vietnamese << "|"        // Nghĩa tiếng Việt
+                << w.ipaText << "|"           // Phiên âm IPA
+                << w.example << "|"           // Câu ví dụ
+                << w.exp << "|"               // Điểm kinh nghiệm (0-100+)
+                << (w.isNew ? "1" : "0") << "|"  // 1 = từ mới, 0 = đã ôn
+                << w.topic << "|"             // Chủ đề (animals, food, ...)
+                << (w.learned ? "1" : "0") << "|"  // 1 = đã học, 0 = chưa học
+                << w.level << "|"             // Level (0-10)
+                << (w.isMastered ? "1" : "0") << "\n";  // 1 = thông thạo (L10)
+            }
+            // File tự động đóng khi kết thúc scope (destructor của ofstream)
+        }
+
+        // ===== PHƯƠNG THỨC LƯU FILE THÔNG THẠO =====
+        void saveMastered() const {
+            // File riêng chứa danh sách từ đã thông thạo (Level 10)
+            ofstream f(masteredFile);
+            if (!f) return;
+            
+            // Chỉ ghi những từ có isMastered = true
+            for (const auto& w : words) {
+                if (w.isMastered) {
+                    // Format đơn giản: english|vietnamese|topic
+                    f << w.english << "|" 
+                    << w.vietnamese << "|" 
+                    << w.topic << "\n";
+                }
+            }
+        }
+
+        // ===== PHƯƠNG THỨC TẢI DỮ LIỆU TỪ FILE =====
+        void loadFromFile() {
+            // Xóa dữ liệu cũ
+            words.clear();  // Xóa vector
+            
+            // Xóa cây BST cũ (kế thừa từ Dictionary)
+            clear(rootEng);   // Giải phóng bộ nhớ cây tiếng Anh
+            clear(rootVie);   // Giải phóng bộ nhớ cây tiếng Việt
+            rootEng = rootVie = nullptr;  // Đặt root = NULL
+            
+            // Mở file để đọc
+            ifstream f(saveFile);
+            if (!f) return;  // Nếu file không tồn tại (user mới) → return
+            
+            // Đọc từng dòng
+            string line;
+            while (getline(f, line)) { //đọc từng dòng
+                // Parse dòng thành các phần (split bởi ký tự '|')
+                stringstream ss(line); // tạo dòng dữ liệu với line
+                vector<string> parts;
+                string part;
+                
+                while (getline(ss, part, '|')) { // đọc ss vào part đến khi gặp | thay vì \n
+                    parts.push_back(trim(part));  //thêm part vào cuối parts và loại bỏ khoảng trắng thừa
+                }
+                
+                // Kiểm tra đủ 10 phần không
+                if (parts.size() < 10) continue;  // Dòng lỗi → bỏ qua
+                
+                // Tạo object Word từ dữ liệu đọc được
+                Word w(
+                    parts[0],  // english
+                    parts[1],  // vietnamese
+                    parts[2],  // ipaText
+                    parts[3],  // example
+                    parts[6]   // topic
+                );
+                
+                // Parse các trường số (có thể bị lỗi nên dùng try-catch)
+                try { 
+                    w.exp = stoi(parts[4]);  // Chuyển string → int
+                } catch(...) { 
+                    w.exp = 0;  // Nếu lỗi → mặc định = 0
+                }
+                
+                w.isNew = (parts[5] == "1");      // "1" → true, "0" → false
+                w.learned = (parts[7] == "1");
+                
+                try { 
+                    w.level = stoi(parts[8]); 
+                } catch(...) { 
+                    w.level = 0; 
+                }
+                
+                w.isMastered = (parts[9] == "1");
+                
+                // Kiểm tra logic: Nếu level >= 10 thì tự động đặt isMastered = true
+                if (w.level >= 10) {
+                    w.isMastered = true;
+                }
+                
+                //Thêm vào danh sách và cây BST
+                words.push_back(w);            // Thêm vào vector
+                Dictionary::add(w);            // Thêm vào BST (để tra từ nhanh)
+            }
+            // File tự động đóng
+        }
+    public:
+        // ===== CONSTRUCTOR: Khởi tạo khi user login =====
+        SavedWords(const string& user) : username(user), // gán username = user
+        saveFile(user + "_words.txt"), // gán saveFile = user + "_words.txt"
+        masteredFile(user + "_mastered.txt") {   
+            loadFromFile();  // Tự động load dữ liệu từ file khi khởi tạo
+        }
+
+        // ===== THÊM HOẶC CẬP NHẬT TỪ (CÓ HỎI USER) =====
+        bool addOrUpdateInteractive(const Word& word, bool askSave = true) {
+            // Tìm xem từ đã tồn tại chưa, dùng find_if: hàm tìm kiếm thông minh
+            auto it = find_if(words.begin(), words.end(), // it: một con trỏ (iterator)
+                            [&](const Word& w) {  // kết hợp với lambda – kiểu như một hàm nhỏ không tên
+                                return w.english == word.english;  // So sánh theo từ tiếng Anh
+                            });
+            
+            bool isNewWord = (it == words.end());  // it == words.end() => fasle
+            
+            // Nếu từ đã có và không hỏi lại → return false
+            if (!askSave && !isNewWord) {
+                return false;
+            }
+            
+            // Nếu là từ mới → hỏi user có muốn lưu không
+            if (isNewWord) {
+                string yn = safeInput("Lưu từ \"" + word.english + "\" vào danh sách cá nhân? (y/n): ");
+                
+                if (trim(yn).empty() || tolower(trim(yn)[0]) != 'y') { // tolower: chuyển chữ hoa thành thường
+                    cout << "Đã bỏ qua lưu từ.\n";
+                    return false;  // User chọn không lưu
+                }
+            }
+            
+            // Thêm từ mới
+            if (isNewWord) {
+                Word newWord = word;         // Copy thông tin từ
+                newWord.exp = 10;            // Khởi tạo +10 EXP
+                newWord.isNew = true;        // Đánh dấu là từ mới
+                newWord.learned = true;      // Đã học (vì user đang tra)
+                newWord.level = 1;           // Bắt đầu từ Level 1
+                
+                words.push_back(newWord);    // Thêm vào vector
+                Dictionary::add(newWord);    // Thêm vào BST
+                
+                cout << "Đã lưu: " << word.english 
+                    << " (Level 1 - MỚI +10 EXP) [" << word.topic << "]\n";
+            } 
+            // BƯỚC 4B: Cập nhật từ đã có
+            else {
+                // Kiểm tra đã thông thạo chưa (Level 10)
+                if (it->getStage() == LearnStage::Mastered) {
+                    cout << "Từ \"" << word.english << "\" đã thông thạo!\n";
+                    return false;  // Không cộng thêm EXP nữa
+                }
+                
+                it->exp += 10;           // Cộng thêm 10 EXP
+                it->isNew = false;       // Không còn là từ mới
+                it->learned = true;      // Đánh dấu đã học
+                
+                int oldLevel = it->level;  // Lưu level cũ để so sánh
+                
+                // VÒNG LẶP: Kiểm tra có lên level không
+                while (it->level < 10 && it->exp >= it->expToNextLevel()) {
+                    it->exp -= it->expToNextLevel();  // Trừ EXP cần để lên level
+                    it->level++;                      // Tăng level
+                    
+                    // Nếu đạt Level 10 → Thông thạo!
+                    if (it->level == 10) {
+                        it->isMastered = true;
+                        cout << "★ THÔNG THẠO: " << word.english << "! ★\n";
+                        saveMastered();  // Lưu vào file mastered riêng
+                        break;
+                    }
+                }
+                
+                // Hiển thị thông tin cập nhật
+                cout << "Cập nhật: " << word.english 
+                    << " (+10 EXP) → Level " << it->level
+                    << " (" << it->stageName() << ")\n";
+                
+                // Thông báo đặc biệt khi đạt Level 5 (hết giai đoạn Cơ bản)
+                if (oldLevel < it->level && it->level == 5) {
+                    cout << "→ Đã đạt Cơ bản!\n";
+                }
+            }
+            
+            // BƯỚC 5: Lưu toàn bộ dữ liệu vào file
+            saveToFile();
+            return true;
+        }
+
+        // ===== TỰ ĐỘNG HỌC (KHÔNG HỎI USER) =====
+        void autoLearn(const string& eng) {
+            // Tìm từ trong danh sách
+            auto it = find_if(words.begin(), words.end(),
+                            [&](const Word& w) { 
+                                return w.english == eng; 
+                            });
+            
+            // Từ đã có trong danh sách
+            if (it != words.end()) {
+                // Kiểm tra đã thông thạo chưa
+                if (it->getStage() == LearnStage::Mastered) {
+                    return;  // Đã thông thạo → không làm gì
+                }
+                
+                // Kiểm tra đã học chưa
+                if (!it->learned) {
+                    // Lần đầu học → +10 EXP
+                    it->learned = true;
+                    it->exp += 10;
+                    cout << "Đã học: " << eng << " (+10 EXP)\n";
+                } else {
+                    // Ôn lại → chỉ +5 EXP
+                    it->exp += 5;
+                    cout << "Ôn lại: " << eng << " (+5 EXP)\n";
+                }
+                
+                it->isNew = false;  // Không còn là từ mới
+                
+                int oldLevel = it->level;
+                
+                // Kiểm tra lên level
+                while (it->level < 10 && it->exp >= it->expToNextLevel()) {
+                    it->exp -= it->expToNextLevel();
+                    it->level++;
+                    
+                    if (it->level == 10) {
+                        it->isMastered = true;
+                        cout << "★ THÔNG THẠO: " << eng << "! ★\n";
+                        saveMastered();
+                        break;
+                    }
+                }
+                
+                // Thông báo nếu lên level
+                if (oldLevel < it->level) {
+                    cout << "→ Lên Level " << it->level 
+                        << " (" << it->stageName() << ")\n";
+                }
+            } 
+            // TRƯỜNG HỢP 2: Từ chưa có → tự động thêm vào
+            else {
+                Word temp(eng, "", "", "", "");  // Tạo từ tạm (chưa có đầy đủ info)
+                temp.learned = true;
+                temp.exp = 10;
+                temp.isNew = false;
+                temp.level = 1;
+                
+                words.push_back(temp);
+                Dictionary::add(temp);
+                
+                cout << "Tự động ghi nhận: " << eng 
+                    << " là đã học (+10 EXP, Level 1)\n";
+            }
+            
+            saveToFile();  // Lưu lại
+        }
+
+        // ===== XÓA TỪ =====
+    bool remove(const string& eng) {
+        // Xóa khỏi vector bằng remove_if
+        auto it = remove_if(words.begin(), words.end(),
+                            [&](const Word& w) { 
+                                return w.english == eng; 
+                            });
+        
+        if (it == words.end()) {
+            return false;  // Không tìm thấy từ
+        }
+        
+        words.erase(it, words.end());  // Xóa khỏi vector
+        
+        // QUAN TRỌNG: Phải rebuild lại cây BST vì đã xóa
+        clear(rootEng); 
+        clear(rootVie);
+        rootEng = rootVie = nullptr;
+        
+        // Thêm lại tất cả từ vào cây
+        for (const auto& w : words) {
             Dictionary::add(w);
         }
-    }
-public:
-    SavedWords(const string& user) : username(user),
-        saveFile(user + "_words.txt"), masteredFile(user + "_mastered.txt") {
-        loadFromFile();
-    }
-    bool addOrUpdateInteractive(const Word& word, bool askSave = true) {
-        auto it = find_if(words.begin(), words.end(),
-                          [&](const Word& w) { return w.english == word.english; });
-        bool isNewWord = (it == words.end());
-        if (!askSave && !isNewWord) return false;
-        if (isNewWord) {
-            string yn = safeInput("Lưu từ \"" + word.english + "\" vào danh sách cá nhân? (y/n): ");
-            if (trim(yn).empty() || tolower(trim(yn)[0]) != 'y') {
-                cout << "Đã bỏ qua lưu từ.\n";
-                return false;
-            }
-        }
-        if (isNewWord) {
-            Word newWord = word;
-            newWord.exp = 10;
-            newWord.isNew = true;
-            newWord.learned = true;
-            newWord.level = 1;
-            words.push_back(newWord);
-            Dictionary::add(newWord);
-            cout << "Đã lưu: " << word.english << " (Level 1 - MỚI +10 EXP) [" << word.topic << "]\n";
-        } else {
-            if (it->getStage() == LearnStage::Mastered) {
-                cout << "Từ \"" << word.english << "\" đã thông thạo!\n";
-                return false;
-            }
-            it->exp += 10;
-            it->isNew = false;
-            it->learned = true;
-            int oldLevel = it->level;
-            while (it->level < 10 && it->exp >= it->expToNextLevel()) {
-                it->exp -= it->expToNextLevel();
-                it->level++;
-                if (it->level == 10) {
-                    it->isMastered = true;
-                    cout << "THÔNG THÁO: " << word.english << "!\n";
-                    saveMastered();
-                    break;
-                }
-            }
-            cout << "Cập nhật: " << word.english << " (+10 EXP) → Level " << it->level
-                 << " (" << it->stageName() << ")\n";
-            if (oldLevel < it->level && it->level == 5) {
-                cout << "→ Đã đạt Cơ bản!\n";
-            }
-        }
-        saveToFile();
+        
+        saveToFile();  // Lưu lại file
         return true;
     }
-    void autoLearn(const string& eng) {
-        auto it = find_if(words.begin(), words.end(),
-                          [&](const Word& w) { return w.english == eng; });
-        if (it != words.end()) {
-            if (it->getStage() == LearnStage::Mastered) return;
-            if (!it->learned) {
-                it->learned = true;
-                it->exp += 10;
-                cout << "Đã học: " << eng << " (+10 EXP)\n";
-            } else {
-                it->exp += 5;
-                cout << "Ôn lại: " << eng << " (+5 EXP)\n";
-            }
-            it->isNew = false;
-            int oldLevel = it->level;
-            while (it->level < 10 && it->exp >= it->expToNextLevel()) {
-                it->exp -= it->expToNextLevel();
-                it->level++;
-                if (it->level == 10) {
-                    it->isMastered = true;
-                    cout << "THÔNG THÁO: " << eng << "!\n";
-                    saveMastered();
-                    break;
-                }
-            }
-            if (oldLevel < it->level) {
-                cout << "→ Lên Level " << it->level << " (" << it->stageName() << ")\n";
-            }
-        } else {
-            Word temp(eng, "", "", "", "");
-            temp.learned = true;
-            temp.exp = 10;
-            temp.isNew = false;
-            temp.level = 1;
-            words.push_back(temp);
-            Dictionary::add(temp);
-            cout << "Tự động ghi nhận: " << eng << " là đã học (+10 EXP, Level 1)\n";
-        }
-        saveToFile();
-    }
-    bool remove(const string& eng) {
-        auto it = remove_if(words.begin(), words.end(),
-                            [&](const Word& w) { return w.english == eng; });
-        if (it == words.end()) return false;
-        words.erase(it, words.end());
-        clear(rootEng); clear(rootVie); rootEng = rootVie = nullptr;
-        for (const auto& w : words) Dictionary::add(w);
-        saveToFile();
-        return true;
-    }
-    void display() const {
-        cout << "\n===== TỪ CỦA " << username << " =====\n";
-        if (words.empty()) { cout << "(Trống)\n"; return; }
-        vector<Word> notLearned, basic, advanced, mastered;
-        for (const auto& w : words) {
-            switch (w.getStage()) {
-                case LearnStage::NotLearned: notLearned.push_back(w); break;
-                case LearnStage::Basic: basic.push_back(w); break;
-                case LearnStage::Advanced: advanced.push_back(w); break;
-                case LearnStage::Mastered: mastered.push_back(w); break;
-            }
-        }
-        auto printGroup = [](const string& title, const vector<Word>& list) {
-            if (list.empty()) return;
-            cout << "\n--- " << title << " (" << list.size() << ") ---\n";
-            for (const auto& w : list) {
-                int next = w.expToNextLevel();
-                cout << w.english << " - " << w.vietnamese
-                     << " | L" << w.level << " (" << w.stageName() << ")"
-                     << " | EXP: " << w.exp << (next > 0 ? "/" + to_string(next) : "")
-                     << " | " << w.topic << "\n";
-            }
-        };
-        printGroup("CHƯA HỌC", notLearned);
-        printGroup("CƠ BẢN (L1-5)", basic);
-        printGroup("NÂNG CAO (L6-9)", advanced);
-        printGroup("THÔNG THÁO (L10)", mastered);
-    }
-    bool contains(const string& eng) const {
-        return any_of(words.begin(), words.end(),
-                      [&](const Word& w) { return w.english == eng; });
-    }
-    const vector<Word>& getWords() const { return words; }
-    int countMasteredInTopic(const string& topic) const {
-        return count_if(words.begin(), words.end(),
-            [&](const Word& w) { return w.getStage() == LearnStage::Mastered && w.topic == topic; });
-    }
-    int getTotalEXP() const {
-        int total = 0;
-        for (const auto& w : words) {
-            total += w.exp;
-            if (w.level > 0) total += (w.level - 1) * 100;
-        }
-        return total;
-    }
-};
 
+
+        // ===== HIỂN THỊ DANH SÁCH TỪ =====
+        void display() const {
+            cout << "\n===== TỪ CỦA " << username << " =====\n";
+            
+            if (words.empty()) { 
+                cout << "(Trống)\n"; 
+                return; 
+            }
+            
+            // Phân loại từ theo giai đoạn (stage)
+            vector<Word> notLearned, basic, advanced, mastered;
+            
+            for (const auto& w : words) {
+                switch (w.getStage()) {
+                    case LearnStage::NotLearned:  // Level 0
+                        notLearned.push_back(w); 
+                        break;
+                    case LearnStage::Basic:       // Level 1-5
+                        basic.push_back(w); 
+                        break;
+                    case LearnStage::Advanced:    // Level 6-9
+                        advanced.push_back(w); 
+                        break;
+                    case LearnStage::Mastered:    // Level 10
+                        mastered.push_back(w); 
+                        break;
+                }
+            }
+            
+            // Lambda function để in từng nhóm
+            auto printGroup = [](const string& title, const vector<Word>& list) {
+                if (list.empty()) return;  // Nhóm rỗng thì không in
+                
+                cout << "\n--- " << title << " (" << list.size() << ") ---\n";
+                
+                for (const auto& w : list) {
+                    int next = w.expToNextLevel();  // EXP cần để lên level tiếp
+                    
+                    cout << w.english << " - " << w.vietnamese
+                        << " | L" << w.level << " (" << w.stageName() << ")"
+                        << " | EXP: " << w.exp;
+                    
+                    // Hiển thị thanh tiến độ: 50/100
+                    if (next > 0) {
+                        cout << "/" << next;
+                    }
+                    
+                    cout << " | " << w.topic << "\n";
+                }
+            };
+            
+            // In ra từng nhóm
+            printGroup("CHƯA HỌC", notLearned);
+            printGroup("CƠ BẢN (L1-5)", basic);
+            printGroup("NÂNG CAO (L6-9)", advanced);
+            printGroup("THÔNG THẠO (L10)", mastered);
+        }
+
+        // ===== KIỂM TRA TỪ CÓ TRONG DANH SÁCH =====
+        bool contains(const string& eng) const {
+            // Dùng any_of để kiểm tra có ít nhất 1 từ khớp không
+            return any_of(words.begin(), words.end(),
+                        [&](const Word& w) { 
+                            return w.english == eng; 
+                        });
+        }
+
+        // ===== GETTER: Lấy toàn bộ danh sách từ =====
+        const vector<Word>& getWords() const { 
+            return words; 
+        }
+
+        // ===== ĐẾM SỐ TỪ THÔNG THẠO THEO CHỦ ĐỀ =====
+        int countMasteredInTopic(const string& topic) const {
+            // Đếm số từ có getStage() == Mastered VÀ thuộc chủ đề này
+            return count_if(words.begin(), words.end(),
+                [&](const Word& w) { 
+                    return w.getStage() == LearnStage::Mastered && w.topic == topic; 
+                });
+        }
+
+        // ===== TÍNH TỔNG EXP =====
+        int getTotalEXP() const {
+            int total = 0;
+            
+            for (const auto& w : words) {
+                total += w.exp;  // Cộng EXP hiện tại
+                
+                // Cộng thêm EXP đã dùng để lên các level trước
+                // Mỗi level tốn 100 EXP → (level - 1) * 100
+                if (w.level > 0) {
+                    total += (w.level - 1) * 100;
+                }
+            }
+            
+            return total;
+        }
+};
+// ===== THUỘC TÍNH (MEMBER VARIABLES) =====
 // ==============================
-// Account
+// CLASS ACCOUNT - QUẢN LÝ TÀI KHOẢN NGƯỜI DÙNG
 // ==============================
 class Account {
-    string username, password;
-    bool isLoggedIn = false;
-    unique_ptr<SavedWords> savedWords;
-    const string accountFile = "accounts.txt";
+    private:
+        string username;              // Tên đăng nhập của user
+        string password;              // Mật khẩu của user (lưu plaintext - không an toàn trong thực tế)
+        bool isLoggedIn = false;      // Trạng thái đăng nhập: true = đã login, false = chưa login
+
+        // Con trỏ thông minh (smart pointer) quản lý danh sách từ đã lưu của user
+        // unique_ptr (smart pointer):tự động giải phóng bộ nhớ khi không dùng nữa
+        unique_ptr<SavedWords> savedWords;  
+
+        // Tên file lưu trữ tài khoản (mỗi dòng: username password)
+        const string accountFile = "accounts.txt";
 public:
+    // ĐĂNG KÝ TÀI KHOẢN 
     bool signUp() {
         cout << "\n=== ĐĂNG KÝ ===\n";
-        username = safeInput("Tên: ");
+    // Nhập tên đăng nhập từ bàn phím
+        username = safeInput("Tên: "); 
+        
+        // Nhập mật khẩu từ bàn phím
         password = safeInput("Mật khẩu: ");
-        if (username.empty() || password.empty()) return cout << "Không để trống!\n", false;
-        ifstream in(accountFile);
-        string u, p; while (in >> u >> p) if (u == username) return cout << "Tên đã tồn tại!\n", false;
-        in.close();
-        ofstream out(accountFile, ios::app);
-        if (out) { out << username << " " << password << "\n"; cout << "Đăng ký thành công!\n"; return true; }
-        return cout << "Lỗi file!\n", false;
+        
+        // Kiểm tra không để trống
+        if (username.empty() || password.empty()) { // gọi empty() trong thư viện string
+            return cout << "Không để trống!\n", false;
+        }
+        
+        // Kiểm tra xem tên đăng nhập đã tồn tại chưa
+        ifstream in(accountFile);  // Mở file accounts.txt để đọc
+        string u, p;            
+        
+        // Đọc từng dòng trong file (mỗi dòng: username password)
+        while (in >> u >> p) {
+            // Nếu tìm thấy username trùng → báo lỗi và return false
+            if (u == username) {
+                return cout << "Tên đã tồn tại!\n", false;
+            }
+        }
+        in.close();  // Đóng file sau khi đọc xong
+        
+        // BƯỚC 3: Ghi tài khoản mới vào file
+        ofstream out(accountFile, ios::app);  // Mở file ở chế độ append (ghi thêm vào cuối)
+        
+        if (out) {
+            // Ghi dòng mới: "username password\n"
+            out << username << " " << password << "\n";
+            cout << "Đăng ký thành công!\n";
+            return true;  // Trả về true = thành công
+        }
+        else {
+            cout << "Lỗi file!\n";
+            return false;            
+        }
     }
+
+    // ===== PHƯƠNG THỨC ĐĂNG NHẬP =====
     bool login() {
         cout << "\n=== ĐĂNG NHẬP ===\n";
+        
+        // Nhập thông tin đăng nhập
         username = safeInput("Tên: ");
         password = safeInput("Mật khẩu: ");
+        
+        // Mở file accounts.txt để kiểm tra
         ifstream in(accountFile);
-        if (!in) return cout << "Chưa có tài khoản!\n", false;
-        string u, p;
-        while (in >> u >> p)
+        if (!in) {
+            // Nếu file không tồn tại → chưa có tài khoản nào
+            return cout << "Chưa có tài khoản!\n", false;
+        }
+        
+        //Duyệt từng dòng để tìm tài khoản khớp
+        string u, p;  
+        while (in >> u >> p) {
+            // Kiểm tra xem username VÀ password có khớp không
             if (u == username && p == password) {
-                isLoggedIn = true;
+                // ĐĂNG NHẬP THÀNH CÔNG!
+                
+                isLoggedIn = true;  // Đánh dấu đã đăng nhập
+                
+                // Tạo đối tượng SavedWords để load danh sách từ đã lưu của user
+                // make_unique tạo con trỏ unique_ptr mới
+                // Truyền username vào để load file "username_words.txt"
                 savedWords = make_unique<SavedWords>(username);
+                
                 cout << "Chào, " << username << "!\n";
-                return true;
+                return true;  // Trả về true = thành công
             }
-        return cout << "Sai thông tin!\n", false;
+        }
+        
+        // Không tìm thấy tài khoản khớp
+        cout << "Sai thông tin!\n";   
+        return false;            
     }
+
+    // ===== PHƯƠNG THỨC ĐĂNG XUẤT =====
     void logout() {
+        // Kiểm tra xem có đang đăng nhập không
         if (isLoggedIn) {
+            // savedWords.reset() sẽ:
+            // 1. Xóa object SavedWords (tự động lưu file trước khi xóa)
+            // 2. Giải phóng bộ nhớ
+            // 3. Đặt con trỏ = nullptr
             savedWords.reset();
-            isLoggedIn = false;
+            
+            isLoggedIn = false;  // Đặt trạng thái = chưa đăng nhập
             cout << "Đăng xuất!\n";
-        } else cout << "Chưa đăng nhập.\n";
+        } else {
+            // Nếu chưa đăng nhập thì không làm gì
+            cout << "Chưa đăng nhập.\n";
+        }
     }
-    bool isLogin() const { return isLoggedIn; }
-    string getUsername() const { return username; }
-    SavedWords* getSavedWords() const { return savedWords.get(); }
+
+    // ===== GETTER: Kiểm tra trạng thái đăng nhập =====
+    bool isLogin() const { 
+        return isLoggedIn;  // Trả về true nếu đã login, false nếu chưa
+    }
+
+    // ===== GETTER: Lấy tên user hiện tại =====
+    string getUsername() const { 
+        return username;  // Trả về tên đăng nhập
+    }
+
+    // ===== GETTER: Lấy con trỏ đến SavedWords =====
+    SavedWords* getSavedWords() const { 
+        // savedWords.get() trả về con trỏ thô (raw pointer)
+        // Dùng để truy cập các method của SavedWords như:
+        // - display(): hiển thị từ đã lưu
+        // - addOrUpdateInteractive(): thêm từ mới
+        // - autoLearn(): tự động cộng EXP
+        return savedWords.get();
+    }
+
+    // ===== KIỂM TRA TỪ ĐÃ ĐƯỢC LƯU CHƯA =====
     bool isWordSaved(const string& eng) const {
+        // Kiểm tra 3 điều kiện (dùng toán tử &&):
+        // 1. isLoggedIn == true: User đã đăng nhập
+        // 2. savedWords != nullptr: SavedWords đã được khởi tạo
+        // 3. savedWords->contains(eng): Từ có trong danh sách
+        // contain() hàm tìm từ trong dictionary
+        // Nếu cả 3 điều kiện đều đúng → return true
+        // *Thứ tự gọi điều kiện
+
         return isLoggedIn && savedWords && savedWords->contains(eng);
     }
 };
-
 // ==============================
 // Topic
 // ==============================
@@ -1008,14 +1394,14 @@ private:
         }
         safeInput("Nhấn Enter để tiếp tục...");
     }
-    void showSearchHistory() {
-        auto history = loadHistory(10);
-        cout << "\n=== LỊCH SỬ TRA TỪ (10 từ gần nhất) ===\n";
-        if (history.empty()) {
+    void showSearchHistory() { // Hiển thị 10 từ gần nhất
+        auto history = loadHistory(10);  // Lấy 10 từ gần nhất
+        cout << "\n=== LỊCH SỬ TRA TỪ (10 từ gần nhất) ===\n"; 
+        if (history.empty()) { // Nếu không có lịch sử
             cout << "(Chưa tra từ nào)\n";
         } else {
-            for (int i = history.size() - 1; i >= 0; --i) {
-                cout << (history.size() - i) << ". " << history[i] << "\n";
+            for (int i = history.size() - 1; i >= 0; --i) { // Hiển thị từ mới nhất trước
+                cout << (history.size() - i) << ". " << history[i] << "\n"; // Hiển thị từ
             }
         }
         safeInput("\nNhấn Enter để quay lại...");
@@ -1142,41 +1528,41 @@ public:
             viewTopicByIndex(choice);
         }
     }
-    void searchWord() {
+    void searchWord() { // Tra từ
         cout << "\nTRA TỪ ĐIỂN\n";
-        string input = safeInput("Nhập từ cần tra: ");
-        input = trim(input);
-        if (input.empty() || input == "0") return;
-        Word* w = globalDict.findEng(input);
-        if (!w) w = globalDict.findVie(input);
+        string input = safeInput("Nhập từ cần tra: ");  // Tiếng Anh hoặc tiếng Việt
+        input = trim(input);  // Xóa khoảng trắng thừa
+        if (input.empty() || input == "0") return;  // Nếu trống hoặc 0 thì thoát
+        Word* w = globalDict.findEng(input);  // Tìm từ theo tiếng Anh
+        if (!w) w = globalDict.findVie(input);   // Nếu không tìm thấy, tìm theo tiếng Việt
         if (w) {
-            saveHistory(w->english);
+            saveHistory(w->english);  // Lưu từ vào lịch sử tra cứu
             cout << "\nKẾT QUẢ TRA CỨU\n";
             cout << "Tiếng Anh: " << w->english << "\n";
             cout << "Tiếng Việt: " << w->vietnamese << "\n";
             cout << "Phiên âm: " << w->ipaText << "\n";
             cout << "Ví dụ: " << w->example << "\n";
             cout << "Chủ đề: " << w->topic << "\n";
-            string c = safeInput("\nPhát âm? (1: Có / 0: Không): ");
+            string c = safeInput("\nPhát âm? (1: Có / 0: Không): ");   // Hỏi phát âm
             if (trim(c) == "1") {
-                speak(w->english);
-                string r = safeInput("Lặp lại? (y/n): ");
-                if (!trim(r).empty() && tolower(trim(r)[0]) == 'y')
-                    speakRepeat(w->english);
+                speak(w->english); // Phát âm từ
+                string r = safeInput("Lặp lại? (y/n): "); // Hỏi lặp lại
+                if (!trim(r).empty() && tolower(trim(r)[0]) == 'y') // Nếu có thì lặp lại
+                    speakRepeat(w->english);  // Lặp lại phát âm
             }
-            if (account.isLogin()) {
-                if (account.isWordSaved(w->english)) {
-                    account.getSavedWords()->autoLearn(w->english);
+            if (account.isLogin()) {  // Nếu đã đăng nhập
+                if (account.isWordSaved(w->english)) {  // Nếu từ đã lưu
+                    account.getSavedWords()->autoLearn(w->english);  // Tự động cập nhật trạng thái học
                 } else {
-                    account.getSavedWords()->addOrUpdateInteractive(*w);
-                }
+                    account.getSavedWords()->addOrUpdateInteractive(*w); // Thêm hoặc cập nhật từ
+                } 
             }
         } else {
             cout << "\nKHÔNG TÌM THẤY \"" << input << "\"\n";
-            auto s1 = globalDict.suggestEng(input);
-            if (!s1.empty()) {
-                cout << "Gợi ý (Anh): ";
-                for (size_t i = 0; i < s1.size(); ++i)
+            auto s1 = globalDict.suggestEng(input); // Gợi ý từ tiếng Anh
+            if (!s1.empty()) { // Nếu có gợi ý
+                cout << "Gợi ý (Anh): "; 
+                for (size_t i = 0; i < s1.size(); ++i) // Hiển thị gợi ý
                     cout << s1[i] << (i < s1.size()-1 ? ", " : "\n");
             }
         }
